@@ -11,7 +11,17 @@
       class="panel"
       :style="{ display: accordionOpIsActive ? 'block' : 'none' }"
     >
-      <MusicComponent :musicData="openings[0]"></MusicComponent>
+      <Suspense>
+        <!-- component with nested async dependencies -->
+        <MusicComponent
+          v-for="(i, index) in openings"
+          :key="index"
+          :musicData="i"
+        ></MusicComponent>
+
+        <!-- loading state via #fallback slot -->
+        <template #fallback> Loading... </template>
+      </Suspense>
     </div>
   </div>
 
@@ -26,7 +36,19 @@
     <div
       class="panel"
       :style="{ display: accordionEndIsActive ? 'block' : 'none' }"
-    ></div>
+    >
+      <Suspense>
+        <!-- component with nested async dependencies -->
+        <MusicComponent
+          v-for="(i, index) in endings"
+          :key="index"
+          :musicData="i"
+        ></MusicComponent>
+
+        <!-- loading state via #fallback slot -->
+        <template #fallback> Loading... </template>
+      </Suspense>
+    </div>
   </div>
 </template>
 
@@ -38,31 +60,23 @@ import { ipcRenderer } from "../electron";
 import { onMounted, ref } from "vue";
 
 let anime_id = 22043;
-let openings = ref([]);
-let endings = ref([]);
-let persent = ref(0);
+const endandop = await loadMal();
+const openings = endandop[0];
+const endings = endandop[1];
 
-function getPage(url) {
-  return new Promise((resolve, reject) => {
-    fetch(url, {
-      method: "GET",
-    })
-      .then((response) => {
-        return response.text();
-      })
-      .then((data) => {
-        resolve(new DOMParser().parseFromString(data, "text/html"));
-      });
+async function getPage(url) {
+  let response = await fetch(url, {
+    method: "GET",
   });
+  let text = await response.text();
+  return new DOMParser().parseFromString(text, "text/html");
 }
 
-function loadMal() {
+async function loadMal() {
   let url = "https://myanimelist.net/anime/" + anime_id;
-  getPage(url).then((dom) => {
-    // console.log(dom);
-    openings.value = getMusic(dom, "opnening");
-    endings.value = getMusic(dom, "ending");
-  });
+  let dom = await getPage(url);
+  // console.log(dom);
+  return [getMusic(dom, "opnening"), getMusic(dom, "ending")];
 }
 
 function getMusic(doc, class_name) {
@@ -130,6 +144,7 @@ function getMusic(doc, class_name) {
     }
     counter++;
   }
+  // console.log(childs);
   return childs;
 }
 
@@ -158,64 +173,6 @@ function sendDownloadRequest(url, songName, author) {
       console.log(data);
     });
 }
-
-// parse and download music
-
-function parseOSANIME(song, auth) {
-  console.log("START PARSING");
-  return new Promise((resolve, reject) => {
-    let url = "https://osanime.com/site-search.html?to-search=";
-    let siteurl = "https://osanime.com";
-    let songName = song.toLowerCase();
-    let author = auth.toLowerCase();
-
-    let fullURL =
-      url + `${author.replaceAll(" ", "+")}+${songName.replaceAll(" ", "+")}`;
-    let backwardsUrl =
-      url + `${songName.replaceAll(" ", "+")}+${author.replaceAll(" ", "+")}`;
-    let onlySongNameUrl = url + `${songName.replaceAll(" ", "+")}`;
-
-    getPage(fullURL).then((dom) => {
-      let fetchresults = Array.from(dom.querySelectorAll("article>a"));
-      let result = fetchresults.find((el) => {
-        return el
-          .querySelector(".vret > a")
-          .title.toLowerCase()
-          .includes(songName);
-      });
-      if (result != undefined) {
-        let fetchurl =
-          siteurl + result.querySelector(".vret > a").getAttribute("href");
-        getPage(fetchurl).then((dom) => {
-          let mp3url = dom.querySelector(".kopler > a.btn").href;
-          // console.log(mp3url);
-
-          fetch(mp3url).then((response) => {
-            if (response.status == 404) reject({ type: 1, text: "Broken url" });
-            // console.log(response.url);
-            console.log(response.url);
-            resolve(response.url);
-
-            // ipcRenderer.send("download", {
-            //   url: response.url,
-            //   properties: {
-            //     directory: "C:/Users/Nikolay/Desktop/testest",
-            //     filename: `${author} - ${songName}.mp3`,
-            //   },
-            // });
-          });
-        });
-      } else {
-        console.error("Тaкой песни нет   --  " + onlySongNameUrl);
-        reject({ type: 0, text: "no song found" });
-      }
-    });
-  });
-}
-
-onMounted(() => {
-  loadMal();
-});
 </script>
 
 <style scoped>
@@ -261,21 +218,5 @@ onMounted(() => {
 
 .active:after {
   content: "\2796"; /* Unicode character for "minus" sign (-) */
-}
-
-.persent {
-  text-align: center;
-}
-
-.song {
-  display: flex;
-  /* justify-content: ; */
-}
-.song + .song {
-  margin-top: 20px;
-}
-.download-select {
-  margin-left: auto;
-  margin-right: 50px;
 }
 </style>

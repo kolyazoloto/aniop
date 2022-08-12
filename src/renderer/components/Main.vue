@@ -1,6 +1,11 @@
 <template>
   <div class="main">
-    <AnimeComponent></AnimeComponent>
+    <Suspense>
+      <!-- component with nested async dependencies -->
+      <AnimeComponent></AnimeComponent>
+      <!-- loading state via #fallback slot -->
+      <template #fallback> Loading... </template>
+    </Suspense>
   </div>
 </template>
 
