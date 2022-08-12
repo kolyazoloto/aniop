@@ -1,13 +1,26 @@
 import { app, BrowserWindow, ipcMain } from "electron";
 import { join } from "path";
 
+// import download from "download";
+
+import fs from "fs";
+import request from "request";
+import progress from "request-progress";
+// import DownloadManager from "electron-download-manager";
+
+// DownloadManager.register({
+//   downloadFolder: "C:/Users/Nikolay/Desktop/testest",
+// });
+
+let mainWindow;
+
 function createWindow() {
-  const mainWindow = new BrowserWindow({
+  mainWindow = new BrowserWindow({
     width: 800,
     height: 600,
     webPreferences: {
       preload: join(__dirname, "preload.js"),
-      nodeIntegration: false,
+      nodeIntegration: true,
       contextIsolation: true,
       webSecurity: false,
     },
@@ -39,4 +52,24 @@ app.on("window-all-closed", function () {
 
 ipcMain.on("message", (event, message) => {
   console.log(message);
+});
+
+ipcMain.handle("download", async (event, info) => {
+  progress(request(info.url), {
+    // throttle: 2000,                    // Throttle the progress event to 2000ms, defaults to 1000ms
+    // delay: 1000,                       // Only start to emit after 1000ms delay, defaults to 0ms
+    // lengthHeader: 'x-transfer-length'  // Length header to use, defaults to content-length
+  })
+    .on("progress", function (state) {
+      console.log("progress", state);
+    })
+    .on("error", function (err) {
+      console.log("ERROR download");
+      return "ERROR download";
+    })
+    .on("end", function () {
+      console.log("download ended");
+      return "download ended";
+    })
+    .pipe(fs.createWriteStream(info.properties.filename));
 });

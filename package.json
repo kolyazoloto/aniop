@@ -10,9 +10,8 @@
     "build:mac": "node scripts/build.js && electron-builder -c config/electron-builder.json --mac",
     "build:linux": "node scripts/build.js && electron-builder -c config/electron-builder.json --linux"
   },
-  "repository": "https://github.com/deluze/electron-vue-template",
   "author": {
-    "name": "Deluze",
+    "name": "kolyazoloto",
     "url": "https://github.com/Deluze"
   },
   "devDependencies": {
@@ -26,6 +25,13 @@
     "vite": "^2.9.9"
   },
   "dependencies": {
+    "download": "^8.0.0",
+    "downloadjs": "^1.4.7",
+    "electron-dl": "^3.3.1",
+    "electron-download-manager": "^2.1.2",
+    "node": "^18.7.0",
+    "request": "^2.88.2",
+    "request-progress": "^3.0.0",
     "vue": "^3.2.36"
   }
 }
