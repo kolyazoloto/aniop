@@ -11,18 +11,7 @@
       class="panel"
       :style="{ display: accordionOpIsActive ? 'block' : 'none' }"
     >
-      <div class="song" v-for="(i, index) in openings" :key="index">
-        <p>
-          {{ i.songName + " - " + i.authors }}
-        </p>
-        <button
-          class="download-btn"
-          v-if="i.url != null"
-          @click="sendDownloadRequest(i.url, i.songName, i.authors)"
-        >
-          download
-        </button>
-      </div>
+      <MusicComponent :musicData="openings[0]"></MusicComponent>
     </div>
   </div>
 
@@ -37,36 +26,23 @@
     <div
       class="panel"
       :style="{ display: accordionEndIsActive ? 'block' : 'none' }"
-    >
-      <div class="song" v-for="(i, index) in endings" :key="index">
-        <p>
-          {{ i.songName + " - " + i.authors }}
-        </p>
-        <button
-          class="download-btn"
-          v-if="i.url != null"
-          @click="sendDownloadRequest(i.url, i.songName, i.authors)"
-        >
-          download
-        </button>
-      </div>
-    </div>
+    ></div>
   </div>
-
-  <h1 class="persent">{{ persent }}</h1>
 </template>
 
 <script setup>
 // import download from "downloadjs";
+import MusicComponent from "./MusicComponent.vue";
+
 import { ipcRenderer } from "../electron";
 import { onMounted, ref } from "vue";
 
-let anime_id = 9253;
+let anime_id = 22043;
 let openings = ref([]);
 let endings = ref([]);
 let persent = ref(0);
 
-async function getPage(url) {
+function getPage(url) {
   return new Promise((resolve, reject) => {
     fetch(url, {
       method: "GET",
@@ -93,7 +69,6 @@ function getMusic(doc, class_name) {
   let music = doc.getElementsByClassName(
     "theme-songs js-theme-songs " + class_name
   )[0];
-  // console.log(class_name);
   let childs = [];
   let authors = music.getElementsByClassName("theme-song-artist");
   let counter = 1;
@@ -112,47 +87,27 @@ function getMusic(doc, class_name) {
       if (originalName != null) {
         originalName = originalName[0].replaceAll(/[()]/g, "");
       }
-
       cleanSongName = songName.textContent
         .replaceAll(/["*]/g, "")
         .replaceAll(/-/g, " ")
         .replaceAll(/\(.+\)/g, "")
         .trim();
       cleanAuthors = authors[i].textContent.replace("by", "").trim();
-      // childs.push({
-      //   counter: counter,
-      //   songName: cleanSongName,
-      //   authors: cleanAuthors,
-      //   episodes: episodes,
-      //   url: null,
-      // });
-      parseMUZOFOND(cleanSongName, cleanAuthors, originalName).then(
-        (data) => {
-          childs.push({
-            counter: counter,
-            songName: cleanSongName,
-            authors: cleanAuthors,
-            episodes: episodes,
-            url: data,
-          });
-        },
-        (onRejectData) => {
-          childs.push({
-            counter: counter,
-            songName: cleanSongName,
-            authors: cleanAuthors,
-            episodes: episodes,
-            url: null,
-          });
-        }
-      );
+
+      let child = {
+        counter: counter,
+        songName: cleanSongName,
+        authors: cleanAuthors,
+        episodes: episodes,
+        url: {},
+      };
+      childs.push(child);
     } else {
       for (let songName2 of td.childNodes) {
         if (songName2.nodeType === 3) {
           originalName = songName2.textContent.match(/\(.+\)/);
           if (originalName != null) {
             originalName = originalName[0].replaceAll(/[()]/g, "");
-            // console.log(originalName);
           }
           cleanSongName = songName2.textContent
             .replaceAll(/["*]/g, "")
@@ -160,45 +115,21 @@ function getMusic(doc, class_name) {
             .replaceAll(/\(.+\)/g, "")
             .trim();
           cleanAuthors = authors[i].textContent.replace("by", "").trim();
-          // console.log(songName2.textContent + authors[i].textContent);
-          // childs.push({
-          //   counter: counter,
-          //   songName: cleanSongName,
-          //   authors: cleanAuthors,
-          //   episodes: episodes,
-          //   url: null,
-          // });
-          parseMUZOFOND(cleanSongName, cleanAuthors, originalName).then(
-            (data) => {
-              childs.push({
-                counter: counter,
-                songName: cleanSongName,
-                authors: cleanAuthors,
-                episodes: episodes,
-                url: data,
-              });
-            },
-            (onRejectData) => {
-              childs.push({
-                counter: counter,
-                songName: cleanSongName,
-                authors: cleanAuthors,
-                episodes: episodes,
-                url: null,
-              });
-            }
-          );
 
+          let child = {
+            counter: counter,
+            songName: cleanSongName,
+            authors: cleanAuthors,
+            episodes: episodes,
+            url: {},
+          };
+          childs.push(child);
           break;
         }
       }
     }
     counter++;
   }
-  // childs.forEach((el) => {
-  //   console.log(el.songName);
-  // });
-
   return childs;
 }
 
@@ -282,119 +213,8 @@ function parseOSANIME(song, auth) {
   });
 }
 
-function parseMUZOFOND(song, auth, originalName) {
-  // console.log(`START PARSING MUZOFOND  ${song} -- ${auth}`);
-  return new Promise((resolve, reject) => {
-    let url = "https://muzofond.fm/search/";
-    let songName = song.toLowerCase();
-    let author = auth.toLowerCase();
-
-    let fullURL =
-      url +
-      `${songName.replaceAll(" ", "%20")}%20${author.replaceAll(" ", "%20")}`;
-
-    // if (originalName != null) {
-    //   fullURL = url + originalName;
-    //   songName = originalName;
-    // }
-    // let backwardsUrl =
-    //   url +
-    //   `${songName.replaceAll(" ", "%20")}%20${author.replaceAll(" ", "%20")}`;
-    // let onlySongNameUrl = url + `${songName.replaceAll(" ", "%20")}`;
-
-    console.log(fullURL);
-    getPage(fullURL).then((dom) => {
-      let fetchresults = Array.from(dom.querySelectorAll(".mainSongs>.item"));
-
-      // fetchresults.forEach((el) => {
-      //   console.log(el.querySelector(".desc"));
-      // });
-      let result = fetchresults.find((el) => {
-        let temp = el
-          .querySelector(".desc>h3 .track")
-          .textContent.toLowerCase();
-        // Ищем что то другое если нарвались на рускую песню !!!!!!!!!!!!!!!!!!!! СУПЕР ВАЖНО
-        if (temp.includes("rus")) {
-          console.log(
-            "WARNING RUSSION OPENING ADAPTATION!!!!!!!!!!!!!   " + songName
-          );
-          return false;
-        }
-        if (temp.includes("instrumental")) {
-          console.log(
-            "WARNING INSTRUMENTAL OPENING ADAPTATION!!!!!!!!!!!!!   " + songName
-          );
-          return false;
-        }
-        return temp.includes(songName);
-      });
-
-      if (result == undefined) {
-        if (fetchresults.length > 0) {
-          console.log(originalName + "  --  " + songName);
-          // console.error(
-          //   "Нет точного совпадения по названию. Пробую оригинальное название если оно есть."
-          // );
-          if (originalName != null) {
-            result = fetchresults.find((el) => {
-              let temp = el
-                .querySelector(".desc>h3 .track")
-                .textContent.toLowerCase();
-              // Ищем что то другое если нарвались на рускую песню !!!!!!!!!!!!!!!!!!!! СУПЕР ВАЖНО
-              if (temp.includes("rus")) {
-                console.log(
-                  "WARNING RUSSION OPENING ADAPTATION!!!!!!!!!!!!!   " +
-                    originalName
-                );
-                return false;
-              }
-              if (temp.includes("instrumental")) {
-                console.log(
-                  "WARNING INSTRUMENTAL OPENING ADAPTATION!!!!!!!!!!!!!   " +
-                    originalName
-                );
-                return false;
-              }
-              return temp.includes(originalName);
-            });
-          } else {
-            // console.error(
-            //   "Нет совпадений и оригинального названия.Беру первое найденнное.Может попадет" +
-            //     fullURL +
-            //     " " +
-            //     originalName
-            // );
-            reject({ type: 0, text: "no song found" });
-            // result = fetchresults[0];
-          }
-        } else {
-          // console.error("Тaкой песни нет   --  " + fullURL);
-          reject({ type: 0, text: "no song found" });
-        }
-      }
-      let musicUrl = result
-        .querySelector(".actions .play")
-        .getAttribute("data-url");
-
-      console.log(musicUrl);
-      resolve(musicUrl);
-    });
-  });
-}
-
 onMounted(() => {
   loadMal();
-  // parseMUZOFOND("Uso", "SID");
-  // parseMUZOFOND("LET IT OUT", "Miho Fukuhara");
-  // parseMUZOFOND("Tsunaida Te", "Lil'B");
-  // parseMUZOFOND("Shunkan Sentimental", "SCANDAL");
-  // parseMUZOFOND("RAY OF LIGHT", "Nakagawa Shouko");
-  // parseMUZOFOND("Rain", "SID");
-  // parseMUZOFOND("Hologram", "NICO Touches the Walls");
-  // parseMUZOFOND("Tsunaida Te", "Lil'B");
-  // parseMUZOFOND("Tsunaida Te", "Lil'B");
-  // parseMUZOFOND("Tsunaida Te", "Lil'B");
-  // parseMUZOFOND("Tsunaida Te", "Lil'B");
 });
 </script>
 
@@ -449,9 +269,13 @@ onMounted(() => {
 
 .song {
   display: flex;
-  justify-content: space-between;
+  /* justify-content: ; */
 }
 .song + .song {
   margin-top: 20px;
+}
+.download-select {
+  margin-left: auto;
+  margin-right: 50px;
 }
 </style>
