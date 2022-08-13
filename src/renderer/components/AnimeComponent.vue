@@ -9,7 +9,14 @@
     </button>
     <div
       class="panel"
-      :style="{ display: accordionOpIsActive ? 'block' : 'none' }"
+      ref="panelOpeningsRef"
+      :style="{
+        maxHeight: !accordionOpIsActive
+          ? null
+          : panelOpeningsRef == null
+          ? 0 + 'px'
+          : panelOpeningsRef.scrollHeight + 'px',
+      }"
     >
       <Suspense>
         <!-- component with nested async dependencies -->
@@ -35,7 +42,14 @@
     </button>
     <div
       class="panel"
-      :style="{ display: accordionEndIsActive ? 'block' : 'none' }"
+      ref="panelEndingsRef"
+      :style="{
+        maxHeight: !accordionEndIsActive
+          ? null
+          : panelEndingsRef == null
+          ? 0 + 'px'
+          : panelEndingsRef.scrollHeight + 'px',
+      }"
     >
       <Suspense>
         <!-- component with nested async dependencies -->
@@ -55,12 +69,15 @@
 <script setup>
 // import download from "downloadjs";
 import MusicComponent from "./MusicComponent.vue";
-import { onMounted, ref } from "vue";
+import { onMounted, ref, computed } from "vue";
 
-let anime_id = 269;
+let anime_id = 22043;
 const endandop = await loadMal();
 const openings = endandop[0];
 const endings = endandop[1];
+// refs
+const panelOpeningsRef = ref(null);
+const panelEndingsRef = ref(null);
 
 async function getPage(url) {
   let response = await fetch(url, {
@@ -150,6 +167,7 @@ function getMusic(doc, class_name) {
 let accordionOpIsActive = ref(false);
 function toggleOpAccordion() {
   accordionOpIsActive.value = !accordionOpIsActive.value;
+  console.log(panelOpeningsRef.value.scrollHeight);
 }
 let accordionEndIsActive = ref(false);
 function toggleEndAccordion() {
@@ -185,10 +203,11 @@ function toggleEndAccordion() {
 
 /* Style the accordion panel. Note: hidden by default */
 .panel {
-  padding: 10px 18px;
+  padding: 0px 18px;
   background-color: rgb(219, 217, 217);
-  display: none;
+  max-height: 0;
   overflow: hidden;
+  transition: max-height 0.2s ease-out;
 }
 .accordion:after {
   content: "\02795"; /* Unicode character for "plus" sign (+) */

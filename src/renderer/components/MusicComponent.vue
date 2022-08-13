@@ -21,6 +21,12 @@
       <option v-if="osanimeurl != null">Osanime</option>
       <option v-if="youtubeurl != null">Youtube</option>
     </select>
+
+    <!-- <audio controls>
+      <source :src="muzofondurl" type="audio/mpeg" />
+      <source :src="osanimeurl" type="audio/mpeg" />
+      <source :src="mp3partyurl" type="audio/mpeg" />
+    </audio> -->
     <button
       class="download-btn"
       @click="downloadClickHandler"
@@ -85,25 +91,25 @@ function downloadClickHandler() {
   }
 }
 
-let muzofondurl = await parseMUZOFOND(
-  props.musicData.songName,
-  props.musicData.authors,
-  props.musicData.originalName
-);
+// let muzofondurl = await parseMUZOFOND(
+//   props.musicData.songName,
+//   props.musicData.authors,
+//   props.musicData.originalName
+// );
 
-let osanimeurl = await parseOSANIME(
-  props.musicData.songName,
-  props.musicData.authors
-);
+// let osanimeurl = await parseOSANIME(
+//   props.musicData.songName,
+//   props.musicData.authors
+// );
 
-let mp3partyurl = await parseMP3PARTY(
-  props.musicData.songName,
-  props.musicData.authors
-);
+// let mp3partyurl = await parseMP3PARTY(
+//   props.musicData.songName,
+//   props.musicData.authors
+// );
 
-// let muzofondurl = null;
-// let osanimeurl = null;
-// let mp3partyurl = null;
+let muzofondurl = null;
+let osanimeurl = null;
+let mp3partyurl = null;
 
 let youtubeurl = null;
 
@@ -191,6 +197,11 @@ async function parseMUZOFOND(song, auth, originalName) {
     let musicUrl = result
       .querySelector(".actions .play")
       .getAttribute("data-url");
+
+    //проверяем на битость ссылки
+    let fetchresponse = await fetch(musicUrl);
+    if (!fetchresponse.ok)
+      throw { type: 1, text: "Broken url(cannot get music url)" };
 
     return musicUrl;
   } catch (err) {
