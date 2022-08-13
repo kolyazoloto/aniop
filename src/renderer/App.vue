@@ -1,5 +1,5 @@
 <template>
-  <Main :downloadTriggerFunc="triggerDownloadEvent"></Main>
+  <Main></Main>
 </template>
 
 <script setup>

@@ -6,11 +6,6 @@ import { join } from "path";
 import fs from "fs";
 import request from "request";
 import progress from "request-progress";
-// import DownloadManager from "electron-download-manager";
-
-// DownloadManager.register({
-//   downloadFolder: "C:/Users/Nikolay/Desktop/testest",
-// });
 
 let mainWindow;
 
@@ -53,23 +48,29 @@ app.on("window-all-closed", function () {
 ipcMain.on("message", (event, message) => {
   console.log(message);
 });
-
-ipcMain.handle("download", async (event, info) => {
+ipcMain.on("download", (event, info) => {
   progress(request(info.url), {
     // throttle: 2000,                    // Throttle the progress event to 2000ms, defaults to 1000ms
     // delay: 1000,                       // Only start to emit after 1000ms delay, defaults to 0ms
     // lengthHeader: 'x-transfer-length'  // Length header to use, defaults to content-length
   })
     .on("progress", function (state) {
-      console.log("progress", state);
+      // console.log("progress", state);
+      mainWindow.webContents.send(`download_${info.properties.id}`, {
+        state: state,
+        ended: false,
+      });
     })
     .on("error", function (err) {
       console.log("ERROR download");
       return "ERROR download";
     })
     .on("end", function () {
-      console.log("download ended");
-      return "download ended";
+      // console.log("download ended");
+      mainWindow.webContents.send(`download_${info.properties.id}`, {
+        state: {},
+        ended: true,
+      });
     })
     .pipe(fs.createWriteStream(info.properties.filename));
 });

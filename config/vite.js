@@ -1,28 +1,100 @@
-const Path = require('path');
-const vuePlugin = require('@vitejs/plugin-vue')
+const Path = require("path");
+const vuePlugin = require("@vitejs/plugin-vue");
 
-const { defineConfig } = require('vite');
+const { defineConfig } = require("vite");
+
+// const NodeGlobalsPolyfillPlugin =
+//   require("@esbuild-plugins/node-globals-polyfill").NodeGlobalsPolyfillPlugin;
+// const NodeModulesPolyfillPlugin =
+//   require("@esbuild-plugins/node-modules-polyfill").NodeModulesPolyfillPlugin;
+// // import vuePlugin from "@vitejs/plugin-vue";
+// const rollupNodePolyFill = require("rollup-plugin-node-polyfills");
 
 /**
  * https://vitejs.dev/config
  */
 const config = defineConfig({
-    root: Path.join(__dirname, '..', 'src', 'renderer'),
-    publicDir: 'public',
-    server: {
-        port: 8080,
+  root: Path.join(__dirname, "..", "src", "renderer"),
+  publicDir: "public",
+  server: {
+    port: 8080,
+  },
+  open: false,
+  build: {
+    outDir: Path.join(__dirname, "..", "build", "renderer"),
+    emptyOutDir: true,
+  },
+  plugins: [vuePlugin()],
+
+  resolve: {
+    alias: {
+      "@": Path.join(__dirname, "..", "src", "renderer"),
     },
-    open: false,
-    build: {
-        outDir: Path.join(__dirname, '..', 'build', 'renderer'),
-        emptyOutDir: true,
-    },
-    plugins: [vuePlugin()],
-    resolve: {
-        alias: {
-            '@': Path.join(__dirname, '..', 'src', 'renderer')
-        }
-    }
+  },
 });
 
 module.exports = config;
+
+// import { defineConfig } from "vite";
+// import { NodeGlobalsPolyfillPlugin } from "@esbuild-plugins/node-globals-polyfill";
+// import { NodeModulesPolyfillPlugin } from "@esbuild-plugins/node-modules-polyfill";
+// import vuePlugin from "@vitejs/plugin-vue";
+// import rollupNodePolyFill from "rollup-plugin-node-polyfills";
+// // https://vitejs.dev/config/
+// export default defineConfig({
+//   resolve: {
+//     alias: {
+//       // This Rollup aliases are extracted from @esbuild-plugins/node-modules-polyfill,
+//       // see https://github.com/remorses/esbuild-plugins/blob/master/node-modules-polyfill/src/polyfills.ts
+//       // process and buffer are excluded because already managed
+//       // by node-globals-polyfil
+//       util: "rollup-plugin-node-polyfills/polyfills/util",
+//       sys: "util",
+//       events: "rollup-plugin-node-polyfills/polyfills/events",
+//       stream: "rollup-plugin-node-polyfills/polyfills/stream",
+//       path: "rollup-plugin-node-polyfills/polyfills/path",
+//       querystring: "rollup-plugin-node-polyfills/polyfills/qs",
+//       punycode: "rollup-plugin-node-polyfills/polyfills/punycode",
+//       url: "rollup-plugin-node-polyfills/polyfills/url",
+//       string_decoder: "rollup-plugin-node-polyfills/polyfills/string-decoder",
+//       http: "rollup-plugin-node-polyfills/polyfills/http",
+//       https: "rollup-plugin-node-polyfills/polyfills/http",
+//       os: "rollup-plugin-node-polyfills/polyfills/os",
+//       assert: "rollup-plugin-node-polyfills/polyfills/assert",
+//       constants: "rollup-plugin-node-polyfills/polyfills/constants",
+//       _stream_duplex:
+//         "rollup-plugin-node-polyfills/polyfills/readable-stream/duplex",
+//       _stream_passthrough:
+//         "rollup-plugin-node-polyfills/polyfills/readable-stream/passthrough",
+//       _stream_readable:
+//         "rollup-plugin-node-polyfills/polyfills/readable-stream/readable",
+//       _stream_writable:
+//         "rollup-plugin-node-polyfills/polyfills/readable-stream/writable",
+//       _stream_transform:
+//         "rollup-plugin-node-polyfills/polyfills/readable-stream/transform",
+//       timers: "rollup-plugin-node-polyfills/polyfills/timers",
+//       console: "rollup-plugin-node-polyfills/polyfills/console",
+//       vm: "rollup-plugin-node-polyfills/polyfills/vm",
+//       zlib: "rollup-plugin-node-polyfills/polyfills/zlib",
+//       tty: "rollup-plugin-node-polyfills/polyfills/tty",
+//       domain: "rollup-plugin-node-polyfills/polyfills/domain",
+//     },
+//   },
+//   optimizeDeps: {
+//     esbuildOptions: {
+//       // Node.js global to browser globalThis
+//       define: {
+//         global: "globalThis",
+//       },
+//       // Enable esbuild polyfill plugins
+//       plugins: [
+//         NodeGlobalsPolyfillPlugin({
+//           process: true,
+//           buffer: true,
+//         }),
+//         NodeModulesPolyfillPlugin(),
+//       ],
+//     },
+//   },
+//   plugins: [vuePlugin(), rollupNodePolyFill()],
+// });

@@ -55,11 +55,9 @@
 <script setup>
 // import download from "downloadjs";
 import MusicComponent from "./MusicComponent.vue";
-
-import { ipcRenderer } from "../electron";
 import { onMounted, ref } from "vue";
 
-let anime_id = 22043;
+let anime_id = 269;
 const endandop = await loadMal();
 const openings = endandop[0];
 const endings = endandop[1];
@@ -102,7 +100,7 @@ function getMusic(doc, class_name) {
         originalName = originalName[0].replaceAll(/[()]/g, "");
       }
       cleanSongName = songName.textContent
-        .replaceAll(/["*]/g, "")
+        .replaceAll(/["*♪]/g, "")
         .replaceAll(/-/g, " ")
         .replaceAll(/\(.+\)/g, "")
         .trim();
@@ -124,7 +122,7 @@ function getMusic(doc, class_name) {
             originalName = originalName[0].replaceAll(/[()]/g, "");
           }
           cleanSongName = songName2.textContent
-            .replaceAll(/["*]/g, "")
+            .replaceAll(/["*♪]/g, "")
             .replaceAll(/-/g, " ")
             .replaceAll(/\(.+\)/g, "")
             .trim();
@@ -156,22 +154,6 @@ function toggleOpAccordion() {
 let accordionEndIsActive = ref(false);
 function toggleEndAccordion() {
   accordionEndIsActive.value = !accordionEndIsActive.value;
-}
-
-function sendDownloadRequest(url, songName, author) {
-  ipcRenderer
-    .invoke("download", {
-      url: url,
-      properties: {
-        directory: "C:/Users/Nikolay/Desktop/testest",
-        filename: `${author} - ${songName}.mp3`,
-        songName: songName,
-        author: author,
-      },
-    })
-    .then((data) => {
-      console.log(data);
-    });
 }
 </script>
 
