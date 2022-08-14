@@ -27,6 +27,7 @@
     "vite": "^2.9.9"
   },
   "dependencies": {
+    "@vuesence/cloud-sync-button": "^0.9.3",
     "download": "^8.0.0",
     "downloadjs": "^1.4.7",
     "electron-dl": "^3.3.1",
@@ -34,6 +35,7 @@
     "node": "^18.7.0",
     "request": "^2.88.2",
     "request-progress": "^3.0.0",
-    "vue": "^3.2.36"
+    "vue": "^3.2.36",
+    "vue3-circle-progress": "^1.0.7"
   }
 }

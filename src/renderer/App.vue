@@ -8,7 +8,13 @@ import Main from "./components/Main.vue";
 
 <style>
 @import url("https://fonts.googleapis.com/css2?family=Merriweather:wght@400;700&display=swap");
-
+:root {
+  --fonColor: #efefef;
+  --secondColor: #d0d6b3;
+  --thirdColor: #e6e9d8;
+  --accentColor: #bcbf9b;
+  --textColor: #0e2206;
+}
 /* Box sizing rules */
 *,
 *::before,

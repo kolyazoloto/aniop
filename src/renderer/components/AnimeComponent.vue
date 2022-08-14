@@ -71,7 +71,7 @@
 import MusicComponent from "./MusicComponent.vue";
 import { onMounted, ref, computed } from "vue";
 
-let anime_id = 22043;
+let anime_id = 32182;
 const endandop = await loadMal();
 const openings = endandop[0];
 const endings = endandop[1];
@@ -167,7 +167,6 @@ function getMusic(doc, class_name) {
 let accordionOpIsActive = ref(false);
 function toggleOpAccordion() {
   accordionOpIsActive.value = !accordionOpIsActive.value;
-  console.log(panelOpeningsRef.value.scrollHeight);
 }
 let accordionEndIsActive = ref(false);
 function toggleEndAccordion() {
@@ -178,46 +177,48 @@ function toggleEndAccordion() {
 <style scoped>
 /* Style the buttons that are used to open and close the accordion panel */
 .accordBox {
-  border: 1px solid black;
+  /* border: 1px solid black; */
 }
 .accordBox + .accordBox {
   margin-top: 10px;
 }
 .accordion {
-  background-color: #eee;
-  color: #444;
+  background-color: var(--secondColor);
+  color: var(--textColor);
   cursor: pointer;
-  padding: 18px;
+  padding: 8px;
+  font-weight: 700;
+  font-size: 15px;
   width: 100%;
   text-align: left;
   border: none;
+  border-radius: 5px;
   outline: none;
+  box-shadow: rgb(50 50 93 / 25%) 1px 3px 6px 0px,
+    rgb(0 0 0 / 30%) 0px 3px 7px -3px;
+
   transition: 0.4s;
 }
 
-/* Add a background color to the button if it is clicked on (add the .active class with JS), and when you move the mouse over it (hover) */
-.active,
+.active {
+  background-color: var(--accentColor);
+  border-radius: 0px;
+  box-shadow: rgb(50 50 93 / 25%) 0px 0px 7px -2px,
+    rgb(0 0 0 / 30%) 0px 3px 7px -3px;
+}
 .accordion:hover {
-  background-color: #ccc;
+  background-color: var(--accentColor);
 }
 
 /* Style the accordion panel. Note: hidden by default */
 .panel {
-  padding: 0px 18px;
-  background-color: rgb(219, 217, 217);
+  padding: 0px 5px;
+  background-color: var(--thirdColor);
   max-height: 0;
   overflow: hidden;
-  transition: max-height 0.2s ease-out;
-}
-.accordion:after {
-  content: "\02795"; /* Unicode character for "plus" sign (+) */
-  font-size: 13px;
-  color: #777;
-  float: right;
-  margin-left: 5px;
-}
+  box-shadow: rgba(50, 50, 93, 0.25) 0px 6px 12px -2px,
+    rgba(0, 0, 0, 0.3) 0px 3px 7px -3px;
 
-.active:after {
-  content: "\2796"; /* Unicode character for "minus" sign (-) */
+  transition: max-height 0.2s ease-out;
 }
 </style>

@@ -16,6 +16,6 @@ import AnimeComponent from "./AnimeComponent.vue";
 <style scoped>
 .main {
   padding: 1rem;
-  background-color: #f3f3f3;
+  background-color: #efefef;
 }
 </style>

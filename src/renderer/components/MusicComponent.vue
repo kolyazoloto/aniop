@@ -1,12 +1,15 @@
 <template>
-  <div class="song">
-    <p>
-      {{ musicData.songName + " - " + musicData.authors }}
-    </p>
-    <!-- <p>{{ url }}</p> -->
-    <!-- <p>{{ muzofondURL }}</p> -->
-    <p class="percent">{{ downloadPercent }}</p>
-    <select
+  <div class="songBar">
+    <div class="songBar__title">
+      <p class="songBar__songname">
+        {{ musicData.songName }}
+      </p>
+      <p class="songBar__authors">
+        {{ musicData.authors }}
+      </p>
+    </div>
+
+    <!-- <select
       class="download-select"
       v-model="selectValue"
       v-if="
@@ -20,16 +23,16 @@
       <option v-if="mp3partyurl != null">Mp3partyurl</option>
       <option v-if="osanimeurl != null">Osanime</option>
       <option v-if="youtubeurl != null">Youtube</option>
-    </select>
+    </select> -->
 
     <!-- <audio controls>
       <source :src="muzofondurl" type="audio/mpeg" />
       <source :src="osanimeurl" type="audio/mpeg" />
       <source :src="mp3partyurl" type="audio/mpeg" />
     </audio> -->
-    <button
-      class="download-btn"
-      @click="downloadClickHandler"
+
+    <div
+      class="download-btn-wrapper"
       v-if="
         muzofondurl != null ||
         osanimeurl != null ||
@@ -37,17 +40,52 @@
         mp3partyurl != null
       "
     >
-      download
-    </button>
+      <Transition name="fade" mode="out-in">
+        <circle-progress
+          v-if="downloadPercent > 0 && downloadPercent < 100"
+          key="0"
+          :percent="downloadPercent"
+          :size="31"
+          :border-width="4"
+          :border-bg-width="6"
+          :fill-color="'#0e2206'"
+          :empty-color="'#bcbf9b'"
+          class="circle-progress-bar" />
+
+        <button
+          v-else-if="downloadPercent == 0"
+          key="1"
+          class="download-btn download-btn--downloading"
+          @click="downloadClickHandler"
+        >
+          <svg class="download-btn__downdload-svg" viewBox="0 0 24 24">
+            <path d="M5,20H19V18H5M19,9H15V3H9V9H5L12,16L19,9Z" />
+          </svg>
+        </button>
+        <div
+          class="download-finished"
+          v-else-if="downloadPercent == 100"
+          key="3"
+        >
+          <svg viewBox="0 0 24 24">
+            <path
+              d="M9,20.42L2.79,14.21L5.62,11.38L9,14.77L18.88,4.88L21.71,7.71L9,20.42Z"
+            />
+          </svg></div
+      ></Transition>
+    </div>
   </div>
 </template>
 
 <script setup>
 import { onMounted, ref, computed } from "vue";
 import { ipcRenderer } from "../electron";
+import "vue3-circle-progress/dist/circle-progress.css";
+import CircleProgress from "vue3-circle-progress";
+
 const props = defineProps(["musicData"]);
 let selectValue = ref("");
-let downloadPercent = ref(null);
+let downloadPercent = ref(0);
 
 function makeid(length) {
   let result = "";
@@ -62,10 +100,14 @@ function makeid(length) {
 
 function downloadClickHandler() {
   let url;
-  if (selectValue.value == "Muzofond") url = muzofondurl;
-  else if (selectValue.value == "Mp3partyurl") url = mp3partyurl;
-  else if (selectValue.value == "Osanime") url = osanimeurl;
-  else if (selectValue.value == "Youtube") url = youtubeurl;
+  // if (selectValue.value == "Muzofond") url = mp3partyurl;
+  // else if (selectValue.value == "Mp3partyurl") url = muzofondurl;
+  // else if (selectValue.value == "Osanime") url = osanimeurl;
+  if (mp3partyurl != null) url = mp3partyurl;
+  else if (muzofondurl != null) url = muzofondurl;
+  else if (osanimeurl != null) url = osanimeurl;
+  else if (youtubeurl != null) url = youtubeurl;
+  // else if (selectValue.value == "Youtube") url = youtubeurl;
   console.log(url);
   //send download request
   if (url != undefined) {
@@ -84,9 +126,9 @@ function downloadClickHandler() {
     window.api.receive(`download_${id}`, (data) => {
       console.log(data);
       if (data.ended) {
-        downloadPercent.value = 1;
+        downloadPercent.value = 100;
         window.api.electronIpcRemoveAllListeners(`download_${id}`);
-      } else downloadPercent.value = data.state.percent;
+      } else downloadPercent.value = Math.round(data.state.percent * 100);
     });
   }
 }
@@ -341,12 +383,35 @@ onMounted(() => {});
 </script>
 
 <style scoped>
-.song {
+.songBar {
+  position: relative;
   display: flex;
-  /* justify-content: ; */
+  padding-block: 10px;
+  align-items: center;
+  /* background-color: var(--thirdColor); */
 }
-.song + .song {
-  margin-top: 20px;
+.songBar + .songBar::after {
+  content: "";
+  position: absolute;
+  left: 0;
+  top: 0;
+  width: 100%;
+  height: 2px;
+  background: linear-gradient(90deg, #00000057, transparent);
+}
+
+.songBar__title {
+}
+.songBar__songname {
+  font-weight: 600;
+  font-size: 16px;
+  line-height: 16px;
+  margin-bottom: 5px;
+}
+.songBar__authors {
+  font-size: 13px;
+  line-height: 13px;
+  font-weight: 400;
 }
 .percent {
   margin-left: auto;
@@ -354,5 +419,76 @@ onMounted(() => {});
 }
 .download-select {
   margin-right: 50px;
+}
+.download-finished {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  width: 30px;
+  height: 30px;
+  border: none;
+  border-radius: 50%;
+  background-color: var(--secondColor);
+  box-shadow: rgba(0, 0, 0, 0.02) 0px 1px 3px 0px,
+    rgba(27, 31, 35, 0.15) 0px 0px 0px 1px;
+}
+.download-finished svg {
+  width: 70%;
+  height: 70%;
+  fill: var(--textColor);
+  /* animation-duration: 3s;
+  animation-name: slidedown;
+  animation-iteration-count: infinite; */
+}
+.download-btn-wrapper {
+  margin-left: auto;
+  margin-right: 10px;
+}
+.download-btn {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  width: 30px;
+  height: 30px;
+  cursor: pointer;
+  border: none;
+  border-radius: 50%;
+  background-color: var(--secondColor);
+  box-shadow: rgba(0, 0, 0, 0.02) 0px 1px 3px 0px,
+    rgba(27, 31, 35, 0.15) 0px 0px 0px 1px;
+  transition: background 0.2s ease-in-out;
+  overflow: hidden;
+}
+.download-btn:hover {
+  background-color: var(--accentColor);
+}
+.download-btn svg {
+  width: 90%;
+  height: 90%;
+  fill: var(--textColor);
+  /* animation-duration: 3s;
+  animation-name: slidedown;
+  animation-iteration-count: infinite; */
+}
+.circle-progress-bar {
+}
+
+@keyframes slidedown {
+  from {
+    transform: translateY(-90%);
+  }
+  to {
+    transform: translateY(90%);
+  }
+}
+
+.fade-enter-active,
+.fade-leave-active {
+  transition: opacity 0.2s ease;
+}
+
+.fade-enter-from,
+.fade-leave-to {
+  opacity: 0;
 }
 </style>
