@@ -9,12 +9,12 @@ contextBridge.exposeInMainWorld("electron", {
 });
 contextBridge.exposeInMainWorld("api", {
   receive: (channel, func) => {
-    console.log("preload-receive called. args: ");
+    // console.log("preload-receive called. args: ");
     ipcRenderer.on(channel, (event, ...args) => func(...args));
   },
 
   electronIpcRemoveAllListeners: (channel: string) => {
-    console.log("Remove all listeners from channel : " + channel);
+    // console.log("Remove all listeners from channel : " + channel);
     ipcRenderer.removeAllListeners(channel);
   },
 });

@@ -59,7 +59,7 @@
         <button
           v-else-if="downloadPercent == 0"
           key="3"
-          class="download-btn download-btn--downloading"
+          class="download-btn"
           @click="downloadClickHandler"
         >
           <svg class="download-btn__downdload-svg" viewBox="0 0 24 24">
@@ -82,6 +82,7 @@ import { ipcRenderer } from "../electron";
 import "vue3-circle-progress/dist/circle-progress.css";
 import CircleProgress from "vue3-circle-progress";
 
+const emit = defineEmits(["downloadComplete"]);
 const props = defineProps(["musicData"]);
 let selectValue = ref("");
 let downloadPercent = ref(0);
@@ -142,10 +143,13 @@ async function downloadClickHandler() {
       if (data.ended) {
         downloadPercent.value = 100;
         downloadFinished.value = true;
+        emit("downloadComplete", { ok: true });
         window.api.electronIpcRemoveAllListeners(`download_${id}`);
       } else downloadPercent.value = Math.round(data.state.percent * 100);
     });
   } else {
+    // error
+    emit("downloadComplete", { ok: false });
     downloadError.value = true;
   }
 }
@@ -401,7 +405,8 @@ async function parseMP3PARTY(song, auth, searchOnlyName = false) {
   }
 }
 
-onMounted(() => {});
+defineExpose({ downloadClickHandler });
+
 // $emit('downloadEmit',{musicData.url, musicData.songName, musicData.authors})
 </script>
 
@@ -506,17 +511,6 @@ onMounted(() => {});
   /* animation-duration: 3s;
   animation-name: slidedown;
   animation-iteration-count: infinite; */
-}
-.circle-progress-bar {
-}
-
-@keyframes slidedown {
-  from {
-    transform: translateY(-90%);
-  }
-  to {
-    transform: translateY(90%);
-  }
 }
 
 .fade-enter-active,
