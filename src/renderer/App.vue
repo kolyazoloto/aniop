@@ -1,5 +1,10 @@
 <template>
-  <Main></Main>
+  <Suspense>
+    <!-- component with nested async dependencies -->
+    <Main></Main>
+    <!-- loading state via #fallback slot -->
+    <template #fallback> Loading... </template>
+  </Suspense>
 </template>
 
 <script setup>

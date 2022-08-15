@@ -31,30 +31,34 @@
       <source :src="mp3partyurl" type="audio/mpeg" />
     </audio> -->
 
-    <div
-      class="download-btn-wrapper"
-      v-if="
-        muzofondurl != null ||
-        osanimeurl != null ||
-        youtubeurl != null ||
-        mp3partyurl != null
-      "
-    >
+    <div class="download-btn-wrapper">
       <Transition name="fade" mode="out-in">
+        <div class="download-error" key="0" v-if="downloadError">
+          <svg viewBox="0 0 24 24">
+            <path d="M10 3H14V14H10V3M10 21V17H14V21H10Z" />
+          </svg>
+        </div>
+        <div class="download-finished" v-else-if="downloadFinished" key="1">
+          <svg viewBox="0 0 24 24">
+            <path
+              d="M9,20.42L2.79,14.21L5.62,11.38L9,14.77L18.88,4.88L21.71,7.71L9,20.42Z"
+            />
+          </svg>
+        </div>
         <circle-progress
-          v-if="downloadPercent > 0 && downloadPercent < 100"
-          key="0"
+          v-else-if="downloadPercent > 0 && downloadPercent < 100"
+          key="2"
           :percent="downloadPercent"
           :size="31"
           :border-width="4"
           :border-bg-width="6"
           :fill-color="'#0e2206'"
           :empty-color="'#bcbf9b'"
-          class="circle-progress-bar" />
-
+          class="circle-progress-bar"
+        />
         <button
           v-else-if="downloadPercent == 0"
-          key="1"
+          key="3"
           class="download-btn download-btn--downloading"
           @click="downloadClickHandler"
         >
@@ -62,21 +66,16 @@
             <path d="M5,20H19V18H5M19,9H15V3H9V9H5L12,16L19,9Z" />
           </svg>
         </button>
-        <div
-          class="download-finished"
-          v-else-if="downloadPercent == 100"
-          key="3"
-        >
-          <svg viewBox="0 0 24 24">
-            <path
-              d="M9,20.42L2.79,14.21L5.62,11.38L9,14.77L18.88,4.88L21.71,7.71L9,20.42Z"
-            />
-          </svg></div
-      ></Transition>
+      </Transition>
     </div>
   </div>
 </template>
-
+<!-- v-if="
+        muzofondurl != null ||
+        osanimeurl != null ||
+        youtubeurl != null ||
+        mp3partyurl != null
+      " -->
 <script setup>
 import { onMounted, ref, computed } from "vue";
 import { ipcRenderer } from "../electron";
@@ -86,6 +85,8 @@ import CircleProgress from "vue3-circle-progress";
 const props = defineProps(["musicData"]);
 let selectValue = ref("");
 let downloadPercent = ref(0);
+let downloadError = ref(false);
+let downloadFinished = ref(false);
 
 function makeid(length) {
   let result = "";
@@ -98,19 +99,32 @@ function makeid(length) {
   return result;
 }
 
-function downloadClickHandler() {
+async function downloadClickHandler() {
   let url;
   // if (selectValue.value == "Muzofond") url = mp3partyurl;
   // else if (selectValue.value == "Mp3partyurl") url = muzofondurl;
   // else if (selectValue.value == "Osanime") url = osanimeurl;
-  if (mp3partyurl != null) url = mp3partyurl;
-  else if (muzofondurl != null) url = muzofondurl;
-  else if (osanimeurl != null) url = osanimeurl;
-  else if (youtubeurl != null) url = youtubeurl;
+
+  url = await parseOSANIME(props.musicData.songName, props.musicData.authors);
+
+  if (url == null) {
+    url = await parseMP3PARTY(
+      props.musicData.songName,
+      props.musicData.authors
+    );
+  }
+  if (url == null) {
+    url = await parseMUZOFOND(
+      props.musicData.songName,
+      props.musicData.authors,
+      props.musicData.originalName
+    );
+  }
+
   // else if (selectValue.value == "Youtube") url = youtubeurl;
   console.log(url);
   //send download request
-  if (url != undefined) {
+  if (url != null && url != undefined) {
     let id = makeid(10);
     ipcRenderer.send("download", {
       url: url,
@@ -124,12 +138,15 @@ function downloadClickHandler() {
     });
     //Подписываемся на ответ
     window.api.receive(`download_${id}`, (data) => {
-      console.log(data);
+      // console.log(data);
       if (data.ended) {
         downloadPercent.value = 100;
+        downloadFinished.value = true;
         window.api.electronIpcRemoveAllListeners(`download_${id}`);
       } else downloadPercent.value = Math.round(data.state.percent * 100);
     });
+  } else {
+    downloadError.value = true;
   }
 }
 
@@ -149,9 +166,9 @@ function downloadClickHandler() {
 //   props.musicData.authors
 // );
 
-let muzofondurl = null;
-let osanimeurl = null;
-let mp3partyurl = null;
+// let muzofondurl = null;
+// let osanimeurl = null;
+// let mp3partyurl = null;
 
 let youtubeurl = null;
 
@@ -242,6 +259,7 @@ async function parseMUZOFOND(song, auth, originalName) {
 
     //проверяем на битость ссылки
     let fetchresponse = await fetch(musicUrl);
+
     if (!fetchresponse.ok)
       throw { type: 1, text: "Broken url(cannot get music url)" };
 
@@ -364,6 +382,11 @@ async function parseMP3PARTY(song, auth, searchOnlyName = false) {
         mode: "cors",
         credentials: "include",
       });
+      let fetchresponse = await fetch(musicUrl);
+      // console.log(fetchresponse);
+      if (!fetchresponse.ok)
+        throw { type: 1, text: "Broken url(cannot get music url)" };
+
       return musicUrl;
     } else {
       console.error("Тaкой песни нет   --  " + fullURL);
@@ -432,13 +455,27 @@ onMounted(() => {});
   box-shadow: rgba(0, 0, 0, 0.02) 0px 1px 3px 0px,
     rgba(27, 31, 35, 0.15) 0px 0px 0px 1px;
 }
+.download-error {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  width: 30px;
+  height: 30px;
+  border: none;
+  border-radius: 50%;
+  background-color: var(--secondColor);
+  box-shadow: rgba(0, 0, 0, 0.02) 0px 1px 3px 0px,
+    rgba(27, 31, 35, 0.15) 0px 0px 0px 1px;
+}
 .download-finished svg {
   width: 70%;
   height: 70%;
   fill: var(--textColor);
-  /* animation-duration: 3s;
-  animation-name: slidedown;
-  animation-iteration-count: infinite; */
+}
+.download-error svg {
+  width: 70%;
+  height: 70%;
+  fill: rgb(218, 51, 51);
 }
 .download-btn-wrapper {
   margin-left: auto;

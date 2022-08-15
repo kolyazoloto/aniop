@@ -1,67 +1,76 @@
 <template>
-  <div class="accordBox">
-    <button
-      class="accordion"
-      :class="{ active: accordionOpIsActive }"
-      @click="toggleOpAccordion"
-    >
-      Openings
-    </button>
-    <div
-      class="panel"
-      ref="panelOpeningsRef"
-      :style="{
-        maxHeight: !accordionOpIsActive
-          ? null
-          : panelOpeningsRef == null
-          ? 0 + 'px'
-          : panelOpeningsRef.scrollHeight + 'px',
-      }"
-    >
-      <Suspense>
-        <!-- component with nested async dependencies -->
-        <MusicComponent
-          v-for="(i, index) in openings"
-          :key="index"
-          :musicData="i"
-        ></MusicComponent>
+  <div class="animeComponentWrapper">
+    <img :src="animeImg" alt="" class="animeImg" />
+    <div class="accordionsWrapper">
+      <div class="accordionsWrapper__top">
+        <p class="animeTitle">{{ animeTitle }}</p>
+        <button class="download_all">download</button>
+      </div>
+      <div class="accordBox">
+        <button
+          class="accordion"
+          :class="{ active: accordionOpIsActive }"
+          @click="toggleOpAccordion"
+        >
+          Openings
+        </button>
+        <div
+          class="panel"
+          ref="panelOpeningsRef"
+          :style="{
+            maxHeight: !accordionOpIsActive
+              ? null
+              : panelOpeningsRef == null
+              ? 0 + 'px'
+              : panelOpeningsRef.scrollHeight + 'px',
+          }"
+        >
+          <Suspense>
+            <!-- component with nested async dependencies -->
+            <MusicComponent
+              v-for="(i, index) in openings"
+              :key="index"
+              :musicData="i"
+            ></MusicComponent>
 
-        <!-- loading state via #fallback slot -->
-        <template #fallback> Loading... </template>
-      </Suspense>
-    </div>
-  </div>
+            <!-- loading state via #fallback slot -->
+            <template #fallback> Loading... </template>
+          </Suspense>
+        </div>
+      </div>
 
-  <div class="accordBox">
-    <button
-      class="accordion"
-      :class="{ active: accordionEndIsActive }"
-      @click="toggleEndAccordion"
-    >
-      Endings
-    </button>
-    <div
-      class="panel"
-      ref="panelEndingsRef"
-      :style="{
-        maxHeight: !accordionEndIsActive
-          ? null
-          : panelEndingsRef == null
-          ? 0 + 'px'
-          : panelEndingsRef.scrollHeight + 'px',
-      }"
-    >
-      <Suspense>
-        <!-- component with nested async dependencies -->
-        <MusicComponent
-          v-for="(i, index) in endings"
-          :key="index"
-          :musicData="i"
-        ></MusicComponent>
+      <div class="accordBox">
+        <button
+          class="accordion"
+          :class="{ active: accordionEndIsActive }"
+          @click="toggleEndAccordion"
+        >
+          Endings
+        </button>
+        <div
+          class="panel"
+          ref="panelEndingsRef"
+          :style="{
+            maxHeight: !accordionEndIsActive
+              ? null
+              : panelEndingsRef == null
+              ? 0 + 'px'
+              : panelEndingsRef.scrollHeight + 'px',
+          }"
+        >
+          <Suspense>
+            <!-- component with nested async dependencies -->
+            <MusicComponent
+              v-for="(i, index) in endings"
+              :key="index"
+              :musicData="i"
+            ></MusicComponent>
 
-        <!-- loading state via #fallback slot -->
-        <template #fallback> Loading... </template>
-      </Suspense>
+            <!-- loading state via #fallback slot -->
+            <template #fallback> Loading... </template>
+          </Suspense>
+        </div>
+      </div>
     </div>
   </div>
 </template>
@@ -71,7 +80,10 @@
 import MusicComponent from "./MusicComponent.vue";
 import { onMounted, ref, computed } from "vue";
 
-let anime_id = 32182;
+const props = defineProps(["animeId", "animeImg", "animeTitle"]);
+
+let anime_id = props.animeId;
+
 const endandop = await loadMal();
 const openings = endandop[0];
 const endings = endandop[1];
@@ -175,13 +187,58 @@ function toggleEndAccordion() {
 </script>
 
 <style scoped>
-/* Style the buttons that are used to open and close the accordion panel */
-.accordBox {
-  /* border: 1px solid black; */
+.animeComponentWrapper {
+  display: flex;
+  width: 100%;
+  gap: 20px;
+  border: 2px solid var(--secondColor);
+  border-radius: 10px;
+  padding: 8px;
 }
-.accordBox + .accordBox {
+.animeImg {
+  width: 93px;
+  height: max-content;
+  box-shadow: rgb(50 50 93 / 25%) 1px 3px 6px 0px,
+    rgb(0 0 0 / 30%) 0px 3px 7px -3px;
+  border-radius: 8px;
+  border: 1px solid var(--textColor);
+}
+
+.accordionsWrapper {
+  flex: 1;
+}
+.accordionsWrapper__top {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+.animeTitle {
+  font-size: 22px;
+  font-weight: 700;
+  /* text-decoration: underline; */
+}
+.download_all {
+  background-color: var(--secondColor);
+  color: var(--textColor);
+  cursor: pointer;
+  padding: 5px;
+  font-weight: 500;
+  font-size: 13px;
+  border: none;
+  border-radius: 5px;
+  outline: none;
+  box-shadow: rgb(50 50 93 / 25%) 1px 3px 6px 0px,
+    rgb(0 0 0 / 30%) 0px 3px 7px -3px;
+
+  transition: 0.3s;
+}
+.download_all:hover {
+  background-color: var(--accentColor);
+}
+.accordBox {
   margin-top: 10px;
 }
+
 .accordion {
   background-color: var(--secondColor);
   color: var(--textColor);
@@ -197,7 +254,7 @@ function toggleEndAccordion() {
   box-shadow: rgb(50 50 93 / 25%) 1px 3px 6px 0px,
     rgb(0 0 0 / 30%) 0px 3px 7px -3px;
 
-  transition: 0.4s;
+  transition: 0.3s;
 }
 
 .active {
