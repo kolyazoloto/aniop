@@ -1,11 +1,75 @@
 <template>
   <div class="main">
+    <div class="main__left">
+      <div class="main__user">
+        <div class="main__user-data" v-if="user_data != null">
+          <img class="main__user-img" :src="user_data.avatar" />
+          <div class="main__user-info">
+            <p class="main__user-nickname">{{ user_data.nickname }}</p>
+            <p class="main__user-years">
+              {{ user_data.full_years + " years" }}
+            </p>
+          </div>
+        </div>
+        <div class="main__input-checkboxWrapper">
+          <label class="checkbox">
+            <input type="checkbox" v-model="dropped" />
+            <span class="checkbox__checkmark">
+              <div class="checkbox__checkmark-fill"></div>
+            </span>
+            dropped
+          </label>
+          <label class="checkbox">
+            <input type="checkbox" v-model="watching" />
+            <span class="checkbox__checkmark">
+              <div class="checkbox__checkmark-fill"></div>
+            </span>
+            watching
+          </label>
+          <label class="checkbox">
+            <input type="checkbox" v-model="planned" />
+            <span class="checkbox__checkmark">
+              <div class="checkbox__checkmark-fill"></div>
+            </span>
+            planned
+          </label>
+          <label class="checkbox">
+            <input type="checkbox" v-model="completed" />
+            <span class="checkbox__checkmark">
+              <div class="checkbox__checkmark-fill"></div>
+            </span>
+            completed
+          </label>
+        </div>
+        <div class="main__input-wrapper">
+          <input class="main__input-input" v-model="nickname" />
+          <button class="main__input-button" @click="getAllData">search</button>
+        </div>
+        <!-- <Bar
+        :chart-options="chartOptions"
+        :chart-data="chartData"
+        :chart-id="'bar-chart'"
+        :dataset-id-key="'label'"
+        :css-classes="'chart'"
+      /> -->
+      </div>
+      <div class="main__filter">
+        <p class="main__filter-title">Anime filter</p>
+        <div class="main__input-wrapper">
+          <input class="main__input-input" v-model="filterstr" />
+          <button class="main__input-button" @click="filter_data">
+            filter
+          </button>
+        </div>
+      </div>
+    </div>
+
     <div class="main__animes">
       <Suspense v-for="(i, index) in user_anime_data">
         <AnimeComponent
           :key="index"
           :animeId="i.anime.id"
-          :animeImg="'https://shikimori.one/' + i.anime.image.original"
+          :animeImg="'https://shikimori.one/' + i.anime.image.preview"
           :animeTitle="i.anime.name"
         ></AnimeComponent>
 
@@ -17,30 +81,243 @@
 
 <script setup>
 import AnimeComponent from "./AnimeComponent.vue";
+// import { Bar } from "vue-chartjs";
+import { ref } from "vue";
+// import {
+//   Chart as ChartJS,
+//   Title,
+//   Tooltip,
+//   BarElement,
+//   CategoryScale,
+//   LinearScale,
+// } from "chart.js";
 
+// ChartJS.register(Title, Tooltip, BarElement, CategoryScale, LinearScale);
+const user_data = ref(null);
+const user_anime_data = ref([]);
+const user_filtered_anime_data = ref([]);
+const nickname = ref("kolyazoloto");
+
+const dropped = ref(false);
+const watching = ref(true);
+const planned = ref(false);
+const completed = ref(false);
+const filterstr = ref("");
+
+function filter_data() {
+  // if (filterstr.value.length > 0) {
+  //   user_filtered_anime_data.value = user_anime_data.value.filter((el) => {
+  //     return (
+  //       el.anime.name.toLowerCase().includes(filterstr.value.toLowerCase()) ||
+  //       el.anime.russian.toLowerCase().includes(filterstr.value.toLowerCase())
+  //     );
+  //   });
+  //   console.log(user_filtered_anime_data.value);
+  // } else user_filtered_anime_data.value = user_anime_data.value;
+}
 async function getJSON(url) {
   const response = await fetch(url);
   return await response.json();
 }
+async function getAllData() {
+  user_data.value = null;
+  user_anime_data.value = [];
+  user_filtered_anime_data.value = [];
+  user_data.value = await getJSON(
+    `https://shikimori.one/api/users/${nickname.value}?is_nickname=1`
+  );
+  let user_id = user_data.value.id;
 
-let nickname = "kolyazoloto";
-let user_data = await getJSON(
-  `https://shikimori.one/api/users/${nickname}?is_nickname=1`
-);
-let user_id = user_data.id;
-let user_anime_data = await getJSON(
-  `https://shikimori.one/api/users/${user_id}/anime_rates?limit=5000&status=watching`
-);
+  if (completed.value) {
+    let completed = await getJSON(
+      `https://shikimori.one/api/users/${user_id}/anime_rates?limit=5000&status=completed`
+    );
+    user_anime_data.value.push(...completed);
+  }
+  if (watching.value) {
+    let watching = await getJSON(
+      `https://shikimori.one/api/users/${user_id}/anime_rates?limit=5000&status=watching`
+    );
+    user_anime_data.value.push(...watching);
+  }
+  if (dropped.value) {
+    let dropped = await getJSON(
+      `https://shikimori.one/api/users/${user_id}/anime_rates?limit=5000&status=dropped`
+    );
+    user_anime_data.value.push(...dropped);
+  }
+  if (planned.value) {
+    let planned = await getJSON(
+      `https://shikimori.one/api/users/${user_id}/anime_rates?limit=5000&status=planned`
+    );
+    user_anime_data.value.push(...planned);
+  }
+  // if (user_anime_data.value.length > 0) {
+  //   filter_data();
+  // }
+}
+
+await getAllData();
+
+// let labels = [];
+// let dataset = [];
+
+// user_data.stats.statuses.anime.forEach((el) => {
+//   labels.push(el.name);
+//   dataset.push(el.size);
+// });
+
+// let chartData = {
+//   labels: labels,
+//   datasets: [
+//     {
+//       data: dataset,
+//       borderColor: "blue",
+//       borderRadius:
+//       backgroundColor: "red",
+
+//     },
+//   ],
+// };
+// let chartOptions = {
+//   responsive: true,
+//   plugins: {
+//     legend: {
+//       position: "top",
+//     },
+//     title: {
+//       display: true,
+//       text: "Shikimori stats",
+//     },
+//   },
+// };
 </script>
 
 <style scoped>
 .main {
-  padding: 8px;
+  display: flex;
+  height: 100vh;
+  /* padding: 8px; */
   background-color: #efefef;
 }
-.main__animes {
+.main__left {
+  width: 250px;
+}
+.main__user,
+.main__filter {
+  margin: 8px;
+  background-color: var(--thirdColor);
+  color: var(--textColor);
+  padding: 8px;
+  box-shadow: rgb(50 50 93 / 25%) 1px 3px 6px 0px,
+    rgb(0 0 0 / 30%) 0px 3px 7px -3px;
+  border: 2px solid var(--accentColor);
+}
+.main__user-data {
+  display: flex;
+  gap: 8px;
+  margin-bottom: 16px;
+}
+.main__user-img {
+  border: 2px solid var(--accentColor);
+  border-radius: 2px;
+  padding: 1px;
+  box-shadow: rgb(50 50 93 / 25%) 1px 3px 6px 0px,
+    rgb(0 0 0 / 30%) 0px 3px 7px -3px;
+}
+.main__user-info {
   display: flex;
   flex-direction: column;
+  justify-content: space-around;
+  font-size: 16px;
+  line-height: 16px;
+  font-weight: 700;
+}
+.main__input-wrapper {
+  display: flex;
+  gap: 16px;
+}
+.main__input-input {
+  width: 55%;
+  background-color: var(--fonColor);
+  outline: none;
+  border: 2px solid var(--accentColor);
+  border-radius: 5px;
+  color: var(--textColor);
+  padding-inline: 8px;
+}
+.main__input-button {
+  padding: 3px 10px;
+  border: 1px solid var(--accentColor);
+  border-radius: 5px;
+  cursor: pointer;
+  box-shadow: rgba(0, 0, 0, 0.02) 0px 1px 3px 0px,
+    rgba(27, 31, 35, 0.15) 0px 0px 0px 1px;
+  background-color: var(--secondColor);
+  color: var(--textColor);
+  font-weight: 700;
+  transition: background 0.3s ease-in-out;
+}
+.main__input-button:hover {
+  background-color: var(--accentColor);
+}
+.main__animes {
+  padding: 8px;
+  overflow-y: scroll;
+  display: flex;
+  flex: 1;
+  flex-direction: column;
   gap: 5px;
+}
+.main__input-checkboxWrapper {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  row-gap: 4px;
+  margin-bottom: 8px;
+}
+.checkbox {
+  position: relative;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  font-size: 12px;
+  font-weight: 700;
+  user-select: none;
+}
+.checkbox input {
+  display: none;
+}
+
+.checkbox__checkmark {
+  padding: 1px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  height: 15px;
+  width: 15px;
+  margin-bottom: 2px;
+  background-color: var(--fonColor);
+  border: 2px solid var(--accentColor);
+  border-radius: 3px;
+}
+
+.checkbox__checkmark-fill {
+  width: 100%;
+  height: 100%;
+  border-radius: 3px;
+  background-color: var(--textColor);
+  transform: scale(0.01);
+  transition: transform 0.3s ease-in-out;
+}
+.checkbox input:checked + .checkbox__checkmark > .checkbox__checkmark-fill {
+  transform: scale(1);
+}
+
+.main__filter-title {
+  font-weight: 700;
+  font-size: 16px;
+  margin-bottom: 4px;
+  margin-left: 4px;
 }
 </style>

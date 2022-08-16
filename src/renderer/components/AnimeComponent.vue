@@ -284,7 +284,6 @@ function toggleEndAccordion() {
 <style scoped>
 .animeComponentWrapper {
   display: flex;
-  width: 100%;
   gap: 20px;
   border: 2px solid var(--secondColor);
   border-radius: 10px;
@@ -310,7 +309,7 @@ function toggleEndAccordion() {
 }
 .animeTitle {
   /* font-size: 22px; */
-  font-size: clamp(12px, 3vw, 22px);
+  font-size: clamp(12px, 2vw, 20px);
   font-weight: 700;
   /* text-decoration: underline; */
 }
@@ -399,7 +398,7 @@ function toggleEndAccordion() {
   outline: none;
   box-shadow: rgb(50 50 93 / 25%) 1px 3px 6px 0px,
     rgb(0 0 0 / 30%) 0px 3px 7px -3px;
-
+  transform: translate3d(1);
   transition: 0.3s;
 }
 
@@ -421,7 +420,7 @@ function toggleEndAccordion() {
   overflow: hidden;
   box-shadow: rgba(50, 50, 93, 0.25) 0px 6px 12px -2px,
     rgba(0, 0, 0, 0.3) 0px 3px 7px -3px;
-
+  transform: translate3d(1);
   transition: max-height 0.2s ease-out;
 }
 .download_all {

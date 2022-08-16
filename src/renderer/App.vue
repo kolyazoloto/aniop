@@ -18,6 +18,7 @@ import Main from "./components/Main.vue";
   --secondColor: #d0d6b3;
   --thirdColor: #e6e9d8;
   --accentColor: #bcbf9b;
+  --fourColor: #6c6e57;
   --textColor: #0e2206;
 }
 /* Box sizing rules */
@@ -78,6 +79,20 @@ button,
 textarea,
 select {
   font: inherit;
+}
+
+::-webkit-scrollbar {
+  width: 10px; /* width of the entire scrollbar */
+}
+
+::-webkit-scrollbar-track {
+  background: var(--thirdColor); /* color of the tracking area */
+}
+
+::-webkit-scrollbar-thumb {
+  background-color: var(--fourColor); /* color of the scroll thumb */
+  border-radius: 20px; /* roundness of the scroll thumb */
+  border: 3px solid var(--thirdColor); /* creates padding around scroll thumb */
 }
 
 /* Remove all animations, transitions and smooth scroll for people that prefer not to see them */
