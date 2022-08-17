@@ -1,7 +1,7 @@
 {
-  "name": "electron-vue-template",
+  "name": "aniop",
   "version": "0.1.0",
-  "description": "A minimal Electron + Vue application",
+  "description": "Download anime openings and endings",
   "main": "build/main/main.js",
   "scripts": {
     "dev": "node scripts/dev-server.js",
@@ -9,11 +9,19 @@
     "build:win": "node scripts/build.js && electron-builder -c config/electron-builder.json --win",
     "build:winport": "node scripts/build.js && electron-builder -c config/electron-builder.json --win portable",
     "build:mac": "node scripts/build.js && electron-builder -c config/electron-builder.json --mac",
-    "build:linux": "node scripts/build.js && electron-builder -c config/electron-builder.json --linux"
+    "build:linux": "node scripts/build.js && electron-builder -c config/electron-builder.json --linux",
+    "build:publish": "node scripts/build.js && electron-builder -c config/electron-builder.json --win   --publish always"
+  },
+  "build": {
+    "win": {
+      "publish": [
+        "github"
+      ]
+    }
   },
   "author": {
     "name": "kolyazoloto",
-    "url": "https://github.com/Deluze"
+    "url": "https://github.com/kolyazoloto"
   },
   "devDependencies": {
     "@esbuild-plugins/node-globals-polyfill": "^0.1.1",
@@ -29,16 +37,10 @@
   },
   "dependencies": {
     "@vuesence/cloud-sync-button": "^0.9.3",
-    "chart.js": "^3.9.1",
-    "download": "^8.0.0",
-    "downloadjs": "^1.4.7",
-    "electron-dl": "^3.3.1",
-    "electron-download-manager": "^2.1.2",
     "node": "^18.7.0",
     "request": "^2.88.2",
     "request-progress": "^3.0.0",
     "vue": "^3.2.36",
-    "vue-chartjs": "^4.1.1",
     "vue3-circle-progress": "^1.0.7"
   }
 }
