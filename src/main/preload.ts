@@ -1,4 +1,5 @@
 import { contextBridge, ipcRenderer } from "electron";
+import { readdir } from "node:fs/promises";
 
 // contextBridge.exposeInMainWorld("electron", {
 //   ipcRenderer: ipcRenderer,
@@ -6,6 +7,12 @@ import { contextBridge, ipcRenderer } from "electron";
 // White-listed channels.
 contextBridge.exposeInMainWorld("electron", {
   ipcRenderer: ipcRenderer,
+});
+contextBridge.exposeInMainWorld("fs", {
+  readdir: async (path) => {
+    let files = await readdir(path);
+    return files;
+  },
 });
 contextBridge.exposeInMainWorld("api", {
   receive: (channel, func) => {

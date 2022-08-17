@@ -7,11 +7,7 @@
           <p class="animeTitle">{{ animeTitle }}</p>
           <div class="dowloadWrapper">
             <p class="dowload_counter">
-              {{
-                `${successDownloadCounter}/${
-                  openingMusicRefs.length + endingMusicRefs.length
-                }`
-              }}
+              {{ `${successDownloadCounter}/${totalAnimeLength}` }}
             </p>
             <Transition name="fade">
               <div class="download-error" v-if="downloadError">
@@ -20,10 +16,17 @@
                 </svg></div
             ></Transition>
             <Transition name="fade" mode="out-in">
+              <div class="download-finished" v-if="downloadFinished" key="1">
+                <svg viewBox="0 0 24 24">
+                  <path
+                    d="M9,20.42L2.79,14.21L5.62,11.38L9,14.77L18.88,4.88L21.71,7.71L9,20.42Z"
+                  />
+                </svg>
+              </div>
               <button
                 class="download_all"
                 @click="downloadAll"
-                v-if="!downloadFinished && !downloadStart"
+                v-else-if="!downloadFinished && !downloadStart"
                 key="0"
               >
                 <svg viewBox="0 0 24 24">
@@ -41,17 +44,6 @@
                 :empty-color="'#bcbf9b'"
                 class="circle-progress-bar"
               />
-              <div
-                class="download-finished"
-                v-else-if="downloadFinished && downloadStart"
-                key="1"
-              >
-                <svg viewBox="0 0 24 24">
-                  <path
-                    d="M9,20.42L2.79,14.21L5.62,11.38L9,14.77L18.88,4.88L21.71,7.71L9,20.42Z"
-                  />
-                </svg>
-              </div>
             </Transition>
           </div>
         </div>
@@ -134,50 +126,62 @@
 import MusicComponent from "./MusicComponent.vue";
 // import "vue3-circle-progress/dist/circle-progress.css";
 import CircleProgress from "vue3-circle-progress";
-import { onMounted, ref, computed } from "vue";
+import { onMounted, ref, computed, watch } from "vue";
 
-const props = defineProps(["animeId", "animeImg", "animeTitle"]);
+const props = defineProps(["animeId", "animeImg", "animeTitle", "index"]);
+const emit = defineEmits(["downloadAllComplete"]);
 
 const anime_id = props.animeId;
 
 const endandop = await loadMal();
 const openings = endandop[0];
 const endings = endandop[1];
+
 // refs
 const panelOpeningsRef = ref(null);
 const panelEndingsRef = ref(null);
 const openingMusicRefs = ref([]);
 const endingMusicRefs = ref([]);
+const totalAnimeLength = computed(() => {
+  return openingMusicRefs.value.length + endingMusicRefs.value.length;
+});
 
 // download counter
 const downloadCounter = ref(0);
 const successDownloadCounter = ref(0);
-const downloadFinished = ref(false);
+const downloadFinished = computed(() => {
+  return downloadCounter.value == totalAnimeLength.value;
+});
+// watch download finish
+watch(downloadFinished, (newVal) => {
+  if (newVal) {
+    console.log("Загрузка завершена  " + props.animeTitle);
+    emit("downloadAllComplete", props.index);
+  }
+});
+//
 const downloadStart = ref(false);
 const downloadError = ref(false);
 const percent = computed(() => {
-  return (
-    (downloadCounter.value /
-      (openingMusicRefs.value.length + endingMusicRefs.value.length)) *
-    100
-  );
+  return (downloadCounter.value / totalAnimeLength.value) * 100;
 });
 
 function musicComponentDownloadCompleteHandler(value) {
   downloadCounter.value++;
-  if (
-    downloadCounter.value ==
-    openingMusicRefs.value.length + endingMusicRefs.value.length
-  )
-    downloadFinished.value = true;
   if (value.ok) successDownloadCounter.value++;
   else downloadError.value = true;
 }
 
 function downloadAll() {
+  if (downloadFinished.value) {
+    console.log("Загрузка уже завершена  " + props.animeTitle);
+    emit("downloadAllComplete", props.index);
+    return;
+  }
+
   downloadStart.value = true;
-  downloadCounter.value = 0;
-  successDownloadCounter.value = 0;
+  // downloadCounter.value = 0;
+  // successDownloadCounter.value = 0;
   openingMusicRefs.value.forEach(async (el) => {
     await el.downloadClickHandler();
   });
@@ -224,11 +228,14 @@ function getMusic(doc, class_name) {
         originalName = originalName[0].replaceAll(/[()]/g, "");
       }
       cleanSongName = songName.textContent
-        .replaceAll(/["*♪]/g, "")
+        .replaceAll(/["*♪/~]/g, "")
         .replaceAll(/-/g, " ")
         .replaceAll(/\(.+\)/g, "")
         .trim();
-      cleanAuthors = authors[i].textContent.replace("by", "").trim();
+      cleanAuthors = authors[i].textContent
+        .replaceAll(/["*♪/~]/g, "")
+        .replace("by", "")
+        .trim();
 
       let child = {
         counter: counter,
@@ -246,11 +253,14 @@ function getMusic(doc, class_name) {
             originalName = originalName[0].replaceAll(/[()]/g, "");
           }
           cleanSongName = songName2.textContent
-            .replaceAll(/["*♪]/g, "")
+            .replaceAll(/["*♪/~]/g, "")
             .replaceAll(/-/g, " ")
             .replaceAll(/\(.+\)/g, "")
             .trim();
-          cleanAuthors = authors[i].textContent.replace("by", "").trim();
+          cleanAuthors = authors[i].textContent
+            .replaceAll(/["*♪/~]/g, "")
+            .replace("by", "")
+            .trim();
 
           let child = {
             counter: counter,
@@ -279,6 +289,8 @@ let accordionEndIsActive = ref(false);
 function toggleEndAccordion() {
   accordionEndIsActive.value = !accordionEndIsActive.value;
 }
+
+defineExpose({ downloadAll });
 </script>
 
 <style scoped>

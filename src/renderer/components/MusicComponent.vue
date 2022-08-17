@@ -77,10 +77,13 @@
         mp3partyurl != null
       " -->
 <script setup>
-import { onMounted, ref, computed } from "vue";
+import { onMounted, ref, inject } from "vue";
 import { ipcRenderer } from "../electron";
 import "vue3-circle-progress/dist/circle-progress.css";
 import CircleProgress from "vue3-circle-progress";
+
+const downloadDir = inject("downloadDir");
+const dirFiles = inject("dirFiles");
 
 const emit = defineEmits(["downloadComplete"]);
 const props = defineProps(["musicData"]);
@@ -88,6 +91,18 @@ let selectValue = ref("");
 let downloadPercent = ref(0);
 let downloadError = ref(false);
 let downloadFinished = ref(false);
+isDownloadedAtStart();
+
+function isDownloadedAtStart() {
+  let isDownloaded = dirFiles.some((el) => {
+    let template = `${props.musicData.authors} - ${props.musicData.songName}.mp3`;
+    return el === template;
+  });
+  if (isDownloaded) {
+    downloadFinished.value = true;
+    emit("downloadComplete", { ok: true });
+  }
+}
 
 function makeid(length) {
   let result = "";
@@ -101,6 +116,7 @@ function makeid(length) {
 }
 
 async function downloadClickHandler() {
+  if (downloadFinished.value) return;
   let url;
   // if (selectValue.value == "Muzofond") url = mp3partyurl;
   // else if (selectValue.value == "Mp3partyurl") url = muzofondurl;
@@ -130,7 +146,7 @@ async function downloadClickHandler() {
     ipcRenderer.send("download", {
       url: url,
       properties: {
-        directory: "C:/Users/Nikolay/Desktop/testest",
+        directory: downloadDir.value,
         filename: `${props.musicData.authors} - ${props.musicData.songName}.mp3`,
         songName: props.musicData.songName,
         author: props.musicData.authors,
@@ -414,6 +430,7 @@ defineExpose({ downloadClickHandler });
 .songBar {
   position: relative;
   display: flex;
+  gap: 16px;
   padding-block: 10px;
   align-items: center;
   /* background-color: var(--thirdColor); */
@@ -432,12 +449,12 @@ defineExpose({ downloadClickHandler });
 }
 .songBar__songname {
   font-weight: 600;
-  font-size: 16px;
+  font-size: clamp(10px, 1.7vw, 16px);
   line-height: 16px;
   margin-bottom: 5px;
 }
 .songBar__authors {
-  font-size: 13px;
+  font-size: clamp(7px, 1.6vw, 13px);
   line-height: 13px;
   font-weight: 400;
 }

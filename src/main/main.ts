@@ -77,5 +77,7 @@ ipcMain.on("download", (event, info) => {
         ended: true,
       });
     })
-    .pipe(fs.createWriteStream(info.properties.filename));
+    .pipe(
+      fs.createWriteStream(info.properties.directory + info.properties.filename)
+    );
 });

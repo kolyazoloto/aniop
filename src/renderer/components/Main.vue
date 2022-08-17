@@ -54,7 +54,7 @@
       /> -->
       </div>
       <div class="main__filter">
-        <p class="main__filter-title">Anime filter</p>
+        <p class="main__filter-title">Anime filter {{}}</p>
         <div class="main__input-wrapper">
           <input class="main__input-input" v-model="filterstr" />
           <button class="main__input-button" @click="filter_data">
@@ -62,17 +62,24 @@
           </button>
         </div>
       </div>
+      <div class="main__download">
+        <button class="main__download-btn" @click="downloadAllAnime">
+          Download
+        </button>
+      </div>
     </div>
 
     <div class="main__animes">
       <Suspense v-for="(i, index) in user_anime_data">
         <AnimeComponent
           :key="index"
+          ref="animeComponentRefs"
+          :index="index"
           :animeId="i.anime.id"
           :animeImg="'https://shikimori.one/' + i.anime.image.preview"
           :animeTitle="i.anime.name"
+          @downloadAllComplete="downloadCompleteHandler"
         ></AnimeComponent>
-
         <!-- <template #fallback> Loading... </template> -->
       </Suspense>
     </div>
@@ -81,18 +88,10 @@
 
 <script setup>
 import AnimeComponent from "./AnimeComponent.vue";
-// import { Bar } from "vue-chartjs";
-import { ref } from "vue";
-// import {
-//   Chart as ChartJS,
-//   Title,
-//   Tooltip,
-//   BarElement,
-//   CategoryScale,
-//   LinearScale,
-// } from "chart.js";
+import { ref, provide, computed } from "vue";
 
-// ChartJS.register(Title, Tooltip, BarElement, CategoryScale, LinearScale);
+const animeComponentRefs = ref([]);
+
 const user_data = ref(null);
 const user_anime_data = ref([]);
 const user_filtered_anime_data = ref([]);
@@ -103,7 +102,28 @@ const watching = ref(true);
 const planned = ref(false);
 const completed = ref(false);
 const filterstr = ref("");
+const downloadDir = ref("C:/Users/Nikolay/Desktop/testest/");
+provide("downloadDir", downloadDir);
+const isDownloadingAll = ref(false);
 
+function downloadAllAnime() {
+  isDownloadingAll.value = !isDownloadingAll.value;
+}
+function downloadCompleteHandler(index) {
+  if (!isDownloadingAll.value) return;
+  if (index + 1 == animeComponentRefs.value.length) return;
+  let nextIndex = index + 1;
+  let nextDownload = animeComponentRefs.value.find((el) => {
+    return el.index == nextIndex;
+  });
+
+  nextDownload.downloadAll();
+}
+
+//Получаем файлы в дериктории
+let dirFiles = await window.fs.readdir(downloadDir.value);
+provide("dirFiles", dirFiles);
+// //////////////
 function filter_data() {
   // if (filterstr.value.length > 0) {
   //   user_filtered_anime_data.value = user_anime_data.value.filter((el) => {
@@ -158,39 +178,6 @@ async function getAllData() {
 }
 
 await getAllData();
-
-// let labels = [];
-// let dataset = [];
-
-// user_data.stats.statuses.anime.forEach((el) => {
-//   labels.push(el.name);
-//   dataset.push(el.size);
-// });
-
-// let chartData = {
-//   labels: labels,
-//   datasets: [
-//     {
-//       data: dataset,
-//       borderColor: "blue",
-//       borderRadius:
-//       backgroundColor: "red",
-
-//     },
-//   ],
-// };
-// let chartOptions = {
-//   responsive: true,
-//   plugins: {
-//     legend: {
-//       position: "top",
-//     },
-//     title: {
-//       display: true,
-//       text: "Shikimori stats",
-//     },
-//   },
-// };
 </script>
 
 <style scoped>
@@ -204,6 +191,7 @@ await getAllData();
   width: 250px;
 }
 .main__user,
+.main__download,
 .main__filter {
   margin: 8px;
   background-color: var(--thirdColor);
@@ -246,7 +234,8 @@ await getAllData();
   color: var(--textColor);
   padding-inline: 8px;
 }
-.main__input-button {
+.main__input-button,
+.main__download-btn {
   padding: 3px 10px;
   border: 1px solid var(--accentColor);
   border-radius: 5px;
@@ -258,7 +247,8 @@ await getAllData();
   font-weight: 700;
   transition: background 0.3s ease-in-out;
 }
-.main__input-button:hover {
+.main__input-button:hover,
+.main__download-btn:hover {
   background-color: var(--accentColor);
 }
 .main__animes {
