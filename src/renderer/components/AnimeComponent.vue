@@ -197,7 +197,15 @@ watch(downloadFinished, (newVal) => {
     downloadStart.value = false;
   }
 });
-//
+// watch download start when change index
+const animeDownloadIndex = inject("animeDownloadIndex");
+watch(animeDownloadIndex, (value) => {
+  console.log(value);
+  if (value === props.index) {
+    downloadAll();
+  }
+});
+
 const downloadStart = ref(false);
 const downloadError = ref(false);
 const percent = computed(() => {

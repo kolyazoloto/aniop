@@ -113,6 +113,8 @@ import AnimeComponent from "./AnimeComponent.vue";
 import { ref, provide, computed } from "vue";
 
 const animeComponentRefs = ref([]);
+const animeDownloadIndex = ref(-1);
+provide("animeDownloadIndex", animeDownloadIndex);
 
 const user_data = ref(null);
 const user_anime_data = ref([]);
@@ -141,11 +143,12 @@ const isDownloadingAll = ref(false);
 
 function downloadAllAnime() {
   isDownloadingAll.value = true;
-  animeComponentRefs.value
-    .find((el) => {
-      return el.index == 0;
-    })
-    .downloadAll();
+  animeDownloadIndex.value = 0;
+  // animeComponentRefs.value
+  //   .find((el) => {
+  //     return el.index == 0;
+  //   })
+  //   .downloadAll();
 }
 function downloadCompleteHandler(index) {
   if (!isDownloadingAll.value) {
@@ -153,13 +156,11 @@ function downloadCompleteHandler(index) {
     isDownloadingAll.value = false;
     return;
   }
-  if (index + 1 == animeComponentRefs.value.length) return;
-  let nextIndex = index + 1;
-  let nextDownload = animeComponentRefs.value.find((el) => {
-    return el.index == nextIndex;
-  });
-
-  nextDownload.downloadAll();
+  if (animeDownloadIndex.value + 1 == animeComponentRefs.value.length) {
+    animeDownloadIndex.value = -1;
+    return;
+  }
+  animeDownloadIndex.value++;
 }
 
 //Получаем файлы в дериктории
