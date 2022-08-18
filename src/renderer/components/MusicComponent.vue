@@ -359,6 +359,18 @@ async function parseMP3PARTY(song, auth, searchOnlyName = false) {
       let temp = el.querySelector(".track__user-panel");
       let tempSongName = temp.getAttribute("data-js-song-title").toLowerCase();
       let tempAuthor = temp.getAttribute("data-js-artist-name").toLowerCase();
+      if (tempSongName.includes("rus")) {
+        console.log(
+          "WARNING RUSSION OPENING ADAPTATION!!!!!!!!!!!!!   " + songName
+        );
+        return false;
+      }
+      if (tempSongName.includes("instrumental")) {
+        console.log(
+          "WARNING INSTRUMENTAL OPENING ADAPTATION!!!!!!!!!!!!!   " + songName
+        );
+        return false;
+      }
       // console.log([temp, tempSongName, tempAuthor]);
       // console.log(songName);
       // console.log(tempSongName.includes(songName));

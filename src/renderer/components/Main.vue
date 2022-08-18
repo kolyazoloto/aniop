@@ -63,6 +63,20 @@
         </div>
       </div>
       <div class="main__download">
+        <label class="checkbox">
+          <input type="checkbox" v-model="willDownloadOpenings" />
+          <span class="checkbox__checkmark">
+            <div class="checkbox__checkmark-fill"></div>
+          </span>
+          Openings
+        </label>
+        <label class="checkbox">
+          <input type="checkbox" v-model="willDownloadEndings" />
+          <span class="checkbox__checkmark">
+            <div class="checkbox__checkmark-fill"></div>
+          </span>
+          Endings
+        </label>
         <button class="main__download-btn" @click="downloadAllAnime">
           Download
         </button>
@@ -102,15 +116,28 @@ const watching = ref(true);
 const planned = ref(false);
 const completed = ref(false);
 const filterstr = ref("");
+const willDownloadOpenings = ref(true);
+provide("willDownloadOpenings", willDownloadOpenings);
+const willDownloadEndings = ref(false);
+provide("willDownloadEndings", willDownloadEndings);
 const downloadDir = ref("C:/Users/Nikolay/Desktop/testest/");
 provide("downloadDir", downloadDir);
 const isDownloadingAll = ref(false);
 
 function downloadAllAnime() {
-  isDownloadingAll.value = !isDownloadingAll.value;
+  isDownloadingAll.value = true;
+  animeComponentRefs.value
+    .find((el) => {
+      return el.index == 0;
+    })
+    .downloadAll();
 }
 function downloadCompleteHandler(index) {
-  if (!isDownloadingAll.value) return;
+  if (!isDownloadingAll.value) {
+    console.log("Download all complete");
+    isDownloadingAll.value = false;
+    return;
+  }
   if (index + 1 == animeComponentRefs.value.length) return;
   let nextIndex = index + 1;
   let nextDownload = animeComponentRefs.value.find((el) => {

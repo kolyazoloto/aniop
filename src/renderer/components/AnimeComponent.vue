@@ -126,7 +126,7 @@
 import MusicComponent from "./MusicComponent.vue";
 // import "vue3-circle-progress/dist/circle-progress.css";
 import CircleProgress from "vue3-circle-progress";
-import { onMounted, ref, computed, watch } from "vue";
+import { onMounted, ref, computed, watch, inject } from "vue";
 
 const props = defineProps(["animeId", "animeImg", "animeTitle", "index"]);
 const emit = defineEmits(["downloadAllComplete"]);
@@ -136,6 +136,8 @@ const anime_id = props.animeId;
 const endandop = await loadMal();
 const openings = endandop[0];
 const endings = endandop[1];
+const willDownloadOpenings = inject("willDownloadOpenings");
+const willDownloadEndings = inject("willDownloadEndings");
 
 // refs
 const panelOpeningsRef = ref(null);
@@ -143,7 +145,12 @@ const panelEndingsRef = ref(null);
 const openingMusicRefs = ref([]);
 const endingMusicRefs = ref([]);
 const totalAnimeLength = computed(() => {
-  return openingMusicRefs.value.length + endingMusicRefs.value.length;
+  if (willDownloadOpenings.value && !willDownloadEndings.value)
+    return openingMusicRefs.value.length;
+  else if (!willDownloadOpenings.value && willDownloadEndings.value)
+    return endingMusicRefs.value.length;
+  else if (willDownloadOpenings.value && willDownloadEndings.value)
+    return openingMusicRefs.value.length + endingMusicRefs.value.length;
 });
 
 // download counter
