@@ -62,6 +62,10 @@
           </button>
         </div>
       </div>
+      <div class="main__settings">
+        <label class="main__settings-path"> Download path </label>
+        <input type="text" class="main__settings-input" v-model="downloadDir" />
+      </div>
       <div class="main__download">
         <label class="checkbox">
           <input type="checkbox" v-model="willDownloadOpenings" />
@@ -228,6 +232,7 @@ await getAllData();
 .main__left {
   width: 250px;
 }
+.main__settings,
 .main__user,
 .main__download,
 .main__filter {
@@ -264,7 +269,8 @@ await getAllData();
   display: flex;
   gap: 16px;
 }
-.main__input-input {
+.main__input-input,
+.main__settings-input {
   width: 55%;
   background-color: var(--fonColor);
   outline: none;
@@ -272,6 +278,15 @@ await getAllData();
   border-radius: 5px;
   color: var(--textColor);
   padding-inline: 8px;
+}
+.main__settings-input {
+  width: 100%;
+}
+.main__settings-path {
+  font-size: 16px;
+  line-height: 16px;
+  font-weight: 700;
+  margin-left: 3px;
 }
 .main__input-button,
 .main__download-btn {
@@ -296,6 +311,7 @@ await getAllData();
 .main__download-btn:hover {
   background-color: var(--accentColor);
 }
+
 .main__animes {
   padding: 8px;
   overflow-y: scroll;
