@@ -1,6 +1,6 @@
 {
   "name": "aniop",
-  "version": "0.1.0",
+  "version": "0.0.1",
   "description": "Download anime openings and endings",
   "main": "build/main/main.js",
   "scripts": {
@@ -10,7 +10,7 @@
     "build:winport": "node scripts/build.js && electron-builder -c config/electron-builder.json --win portable",
     "build:mac": "node scripts/build.js && electron-builder -c config/electron-builder.json --mac",
     "build:linux": "node scripts/build.js && electron-builder -c config/electron-builder.json --linux",
-    "build:publish": "node scripts/build.js && electron-builder -c config/electron-builder.json --win   --publish always"
+    "build:publish": "node scripts/build.js && electron-builder -c config/electron-builder.json --win   --publish onTag"
   },
   "build": {
     "win": {
