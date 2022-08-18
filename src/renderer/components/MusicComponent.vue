@@ -9,28 +9,6 @@
       </p>
     </div>
 
-    <!-- <select
-      class="download-select"
-      v-model="selectValue"
-      v-if="
-        muzofondurl != null ||
-        osanimeurl != null ||
-        youtubeurl != null ||
-        mp3partyurl != null
-      "
-    >
-      <option v-if="muzofondurl != null">Muzofond</option>
-      <option v-if="mp3partyurl != null">Mp3partyurl</option>
-      <option v-if="osanimeurl != null">Osanime</option>
-      <option v-if="youtubeurl != null">Youtube</option>
-    </select> -->
-
-    <!-- <audio controls>
-      <source :src="muzofondurl" type="audio/mpeg" />
-      <source :src="osanimeurl" type="audio/mpeg" />
-      <source :src="mp3partyurl" type="audio/mpeg" />
-    </audio> -->
-
     <div class="download-btn-wrapper">
       <Transition name="fade" mode="out-in">
         <div class="download-error" key="0" v-if="downloadError">
@@ -86,7 +64,7 @@ const downloadDir = inject("downloadDir");
 const dirFiles = inject("dirFiles");
 
 const emit = defineEmits(["downloadComplete"]);
-const props = defineProps(["musicData"]);
+const props = defineProps(["musicData", "type"]);
 let selectValue = ref("");
 let downloadPercent = ref(0);
 let downloadError = ref(false);
@@ -100,7 +78,7 @@ function isDownloadedAtStart() {
   });
   if (isDownloaded) {
     downloadFinished.value = true;
-    emit("downloadComplete", { ok: true });
+    emit("downloadComplete", { ok: true, type: props.type });
   }
 }
 
@@ -159,13 +137,13 @@ async function downloadClickHandler() {
       if (data.ended) {
         downloadPercent.value = 100;
         downloadFinished.value = true;
-        emit("downloadComplete", { ok: true });
+        emit("downloadComplete", { ok: true, type: props.type });
         window.api.electronIpcRemoveAllListeners(`download_${id}`);
       } else downloadPercent.value = Math.round(data.state.percent * 100);
     });
   } else {
     // error
-    emit("downloadComplete", { ok: false });
+    emit("downloadComplete", { ok: false, type: props.type });
     downloadError.value = true;
   }
 }

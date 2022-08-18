@@ -74,6 +74,7 @@
                 ref="openingMusicRefs"
                 :key="index"
                 :musicData="i"
+                :type="'opening'"
               ></MusicComponent>
 
               <!-- loading state via #fallback slot -->
@@ -109,6 +110,7 @@
                 ref="endingMusicRefs"
                 :key="index"
                 :musicData="i"
+                :type="'ending'"
               ></MusicComponent>
 
               <!-- loading state via #fallback slot -->
@@ -154,8 +156,29 @@ const totalAnimeLength = computed(() => {
 });
 
 // download counter
-const downloadCounter = ref(0);
-const successDownloadCounter = ref(0);
+const downloadOpeningsCounter = ref(0);
+const downloadEndingsCounter = ref(0);
+const downloadCounter = computed(() => {
+  if (willDownloadOpenings.value && !willDownloadEndings.value)
+    return downloadOpeningsCounter.value;
+  else if (!willDownloadOpenings.value && willDownloadEndings.value)
+    return downloadEndingsCounter.value;
+  else if (willDownloadOpenings.value && willDownloadEndings.value)
+    return downloadOpeningsCounter.value + downloadEndingsCounter.value;
+});
+
+const successDownloadOpeningsCounter = ref(0);
+const successDownloadEndingsCounter = ref(0);
+const successDownloadCounter = computed(() => {
+  if (willDownloadOpenings.value && !willDownloadEndings.value)
+    return successDownloadOpeningsCounter.value;
+  else if (!willDownloadOpenings.value && willDownloadEndings.value)
+    return successDownloadEndingsCounter.value;
+  else if (willDownloadOpenings.value && willDownloadEndings.value)
+    return (
+      successDownloadOpeningsCounter.value + successDownloadEndingsCounter.value
+    );
+});
 const downloadFinished = computed(() => {
   return downloadCounter.value == totalAnimeLength.value;
 });
@@ -164,6 +187,7 @@ watch(downloadFinished, (newVal) => {
   if (newVal) {
     console.log("Загрузка завершена  " + props.animeTitle);
     emit("downloadAllComplete", props.index);
+    downloadStart.value = false;
   }
 });
 //
@@ -174,9 +198,17 @@ const percent = computed(() => {
 });
 
 function musicComponentDownloadCompleteHandler(value) {
-  downloadCounter.value++;
-  if (value.ok) successDownloadCounter.value++;
-  else downloadError.value = true;
+  if (value.type === "opening") {
+    downloadOpeningsCounter.value++;
+  } else downloadEndingsCounter.value++;
+
+  if (value.ok) {
+    if (value.type === "opening") {
+      successDownloadOpeningsCounter.value++;
+    } else {
+      successDownloadEndingsCounter.value++;
+    }
+  } else downloadError.value = true;
 }
 
 function downloadAll() {
@@ -189,12 +221,22 @@ function downloadAll() {
   downloadStart.value = true;
   // downloadCounter.value = 0;
   // successDownloadCounter.value = 0;
-  openingMusicRefs.value.forEach(async (el) => {
-    await el.downloadClickHandler();
-  });
-  endingMusicRefs.value.forEach(async (el) => {
-    await el.downloadClickHandler();
-  });
+  if (willDownloadOpenings.value && !willDownloadEndings.value) {
+    openingMusicRefs.value.forEach(async (el) => {
+      await el.downloadClickHandler();
+    });
+  } else if (!willDownloadOpenings.value && willDownloadEndings.value) {
+    endingMusicRefs.value.forEach(async (el) => {
+      await el.downloadClickHandler();
+    });
+  } else if (willDownloadOpenings.value && willDownloadEndings.value) {
+    openingMusicRefs.value.forEach(async (el) => {
+      await el.downloadClickHandler();
+    });
+    endingMusicRefs.value.forEach(async (el) => {
+      await el.downloadClickHandler();
+    });
+  }
 }
 
 async function getPage(url) {

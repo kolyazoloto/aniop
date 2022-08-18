@@ -228,6 +228,7 @@ await getAllData();
     rgb(0 0 0 / 30%) 0px 3px 7px -3px;
   border: 2px solid var(--accentColor);
 }
+
 .main__user-data {
   display: flex;
   gap: 8px;
@@ -336,5 +337,13 @@ await getAllData();
   font-size: 16px;
   margin-bottom: 4px;
   margin-left: 4px;
+}
+.main__download {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+}
+.main__download-btn {
+  margin-top: 8px;
+  grid-column: 1/-1;
 }
 </style>
