@@ -77,7 +77,11 @@
           </span>
           Endings
         </label>
-        <button class="main__download-btn" @click="downloadAllAnime">
+        <button
+          class="main__download-btn"
+          :class="{ disabled: downloadBtnDisable }"
+          @click="downloadAllAnime"
+        >
           Download
         </button>
       </div>
@@ -110,6 +114,13 @@ const user_data = ref(null);
 const user_anime_data = ref([]);
 const user_filtered_anime_data = ref([]);
 const nickname = ref("kolyazoloto");
+// const downloadBtnDisable = computed(() => {
+//   animeComponentRefs.value.some((el) => {
+//     console.log(el.downloadStart);
+//     return el.downloadStart;
+//   });
+// });
+const downloadBtnDisable = ref(false);
 
 const dropped = ref(false);
 const watching = ref(true);
@@ -273,7 +284,13 @@ await getAllData();
   background-color: var(--secondColor);
   color: var(--textColor);
   font-weight: 700;
-  transition: background 0.3s ease-in-out;
+  transition: background 0.3s ease-in-out, border 0.3s ease-in-out;
+}
+.main__download-btn.disabled {
+  pointer-events: none;
+  background-color: var(--thirdColor);
+  border-color: var(--textColor);
+  opacity: 0.3;
 }
 .main__input-button:hover,
 .main__download-btn:hover {

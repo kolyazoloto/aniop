@@ -148,26 +148,6 @@ async function downloadClickHandler() {
   }
 }
 
-// let muzofondurl = await parseMUZOFOND(
-//   props.musicData.songName,
-//   props.musicData.authors,
-//   props.musicData.originalName
-// );
-
-// let osanimeurl = await parseOSANIME(
-//   props.musicData.songName,
-//   props.musicData.authors
-// );
-
-// let mp3partyurl = await parseMP3PARTY(
-//   props.musicData.songName,
-//   props.musicData.authors
-// );
-
-// let muzofondurl = null;
-// let osanimeurl = null;
-// let mp3partyurl = null;
-
 let youtubeurl = null;
 
 async function getPage(url) {

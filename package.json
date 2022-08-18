@@ -10,7 +10,7 @@
     "build:winport": "node scripts/build.js && electron-builder -c config/electron-builder.json --win portable",
     "build:mac": "node scripts/build.js && electron-builder -c config/electron-builder.json --mac",
     "build:linux": "node scripts/build.js && electron-builder -c config/electron-builder.json --linux",
-    "build:publish": "node scripts/build.js && electron-builder -c config/electron-builder.json --win   --publish onTag"
+    "build:publish": "node scripts/build.js && electron-builder -c config/electron-builder.json --win --publish onTagOrDraft"
   },
   "build": {
     "win": {
@@ -32,11 +32,11 @@
     "chokidar": "^3.5.3",
     "electron": "^19.0.0",
     "electron-builder": "^23.0.3",
+    "electron-updater": "^5.2.1",
     "typescript": "^4.6.2",
     "vite": "^2.9.9"
   },
   "dependencies": {
-    "@vuesence/cloud-sync-button": "^0.9.3",
     "node": "^18.7.0",
     "request": "^2.88.2",
     "request-progress": "^3.0.0",

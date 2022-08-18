@@ -6,45 +6,52 @@
         <div class="accordionsWrapper__top">
           <p class="animeTitle">{{ animeTitle }}</p>
           <div class="dowloadWrapper">
-            <p class="dowload_counter">
-              {{ `${successDownloadCounter}/${totalAnimeLength}` }}
-            </p>
             <Transition name="fade">
-              <div class="download-error" v-if="downloadError">
-                <svg viewBox="0 0 24 24">
-                  <path d="M10 3H14V14H10V3M10 21V17H14V21H10Z" />
-                </svg></div
-            ></Transition>
-            <Transition name="fade" mode="out-in">
-              <div class="download-finished" v-if="downloadFinished" key="1">
-                <svg viewBox="0 0 24 24">
-                  <path
-                    d="M9,20.42L2.79,14.21L5.62,11.38L9,14.77L18.88,4.88L21.71,7.71L9,20.42Z"
-                  />
-                </svg>
-              </div>
-              <button
-                class="download_all"
-                @click="downloadAll"
-                v-else-if="!downloadFinished && !downloadStart"
-                key="0"
+              <p
+                class="dowload_counter"
+                v-if="willDownloadOpenings || willDownloadEndings"
               >
-                <svg viewBox="0 0 24 24">
-                  <path d="M5,20H19V18H5M19,9H15V3H9V9H5L12,16L19,9Z" />
-                </svg>
-              </button>
-              <circle-progress
-                v-else-if="!downloadFinished && downloadStart"
-                key="2"
-                :percent="percent"
-                :size="31"
-                :border-width="4"
-                :border-bg-width="6"
-                :fill-color="'#0e2206'"
-                :empty-color="'#bcbf9b'"
-                class="circle-progress-bar"
-              />
+                {{ `${successDownloadCounter}/${totalAnimeLength}` }}
+              </p>
             </Transition>
+            <template v-if="willDownloadOpenings || willDownloadEndings">
+              <Transition name="fade">
+                <div class="download-error" v-if="downloadError">
+                  <svg viewBox="0 0 24 24">
+                    <path d="M10 3H14V14H10V3M10 21V17H14V21H10Z" />
+                  </svg></div
+              ></Transition>
+              <Transition name="fade" mode="out-in">
+                <div class="download-finished" v-if="downloadFinished" key="1">
+                  <svg viewBox="0 0 24 24">
+                    <path
+                      d="M9,20.42L2.79,14.21L5.62,11.38L9,14.77L18.88,4.88L21.71,7.71L9,20.42Z"
+                    />
+                  </svg>
+                </div>
+                <button
+                  class="download_all"
+                  @click="downloadAll"
+                  v-else-if="!downloadFinished && !downloadStart"
+                  key="0"
+                >
+                  <svg viewBox="0 0 24 24">
+                    <path d="M5,20H19V18H5M19,9H15V3H9V9H5L12,16L19,9Z" />
+                  </svg>
+                </button>
+                <circle-progress
+                  v-else-if="!downloadFinished && downloadStart"
+                  key="2"
+                  :percent="percent"
+                  :size="31"
+                  :border-width="4"
+                  :border-bg-width="6"
+                  :fill-color="'#0e2206'"
+                  :empty-color="'#bcbf9b'"
+                  class="circle-progress-bar"
+                />
+              </Transition>
+            </template>
           </div>
         </div>
         <div class="accordBox">
@@ -131,7 +138,7 @@ import CircleProgress from "vue3-circle-progress";
 import { onMounted, ref, computed, watch, inject } from "vue";
 
 const props = defineProps(["animeId", "animeImg", "animeTitle", "index"]);
-const emit = defineEmits(["downloadAllComplete"]);
+const emit = defineEmits(["downloadAllComplete", "downloadAllStarted"]);
 
 const anime_id = props.animeId;
 
@@ -277,12 +284,12 @@ function getMusic(doc, class_name) {
         originalName = originalName[0].replaceAll(/[()]/g, "");
       }
       cleanSongName = songName.textContent
-        .replaceAll(/["*♪/~]/g, "")
+        .replaceAll(/["*♪/\\~:?<>|]/g, "")
         .replaceAll(/-/g, " ")
         .replaceAll(/\(.+\)/g, "")
         .trim();
       cleanAuthors = authors[i].textContent
-        .replaceAll(/["*♪/~]/g, "")
+        .replaceAll(/["*♪/\\~:?<>|]/g, "")
         .replace("by", "")
         .trim();
 
@@ -302,12 +309,12 @@ function getMusic(doc, class_name) {
             originalName = originalName[0].replaceAll(/[()]/g, "");
           }
           cleanSongName = songName2.textContent
-            .replaceAll(/["*♪/~]/g, "")
+            .replaceAll(/["*♪/\\~:?<>|]/g, "")
             .replaceAll(/-/g, " ")
             .replaceAll(/\(.+\)/g, "")
             .trim();
           cleanAuthors = authors[i].textContent
-            .replaceAll(/["*♪/~]/g, "")
+            .replaceAll(/["*♪/\\~:?<>|]/g, "")
             .replace("by", "")
             .trim();
 
@@ -339,7 +346,13 @@ function toggleEndAccordion() {
   accordionEndIsActive.value = !accordionEndIsActive.value;
 }
 
-defineExpose({ downloadAll });
+defineExpose({
+  downloadAll,
+  totalAnimeLength,
+  downloadCounter,
+  successDownloadCounter,
+  downloadStart,
+});
 </script>
 
 <style scoped>

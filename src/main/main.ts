@@ -1,4 +1,5 @@
 import { app, BrowserWindow, ipcMain, session } from "electron";
+import { autoUpdater } from "electron-updater";
 import { join } from "path";
 
 // import download from "download";
@@ -44,6 +45,7 @@ app.whenReady().then(() => {
     details.requestHeaders["User-Agent"] = "aniop";
     callback({ cancel: false, requestHeaders: details.requestHeaders });
   });
+  autoUpdater.checkForUpdatesAndNotify();
 });
 
 app.on("window-all-closed", function () {
