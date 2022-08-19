@@ -130,14 +130,14 @@
 import AnimeComponent from "./AnimeComponent.vue";
 import { $vfm, VueFinalModal, ModalsContainer } from "vue-final-modal";
 import { ipcRenderer } from "../electron";
-import { ref, provide, computed } from "vue";
+import { ref, provide, computed, watch } from "vue";
 
 // auto updater
 const showModalUpdateAvailable = ref(false);
 const showModalUpdateDownloaded = ref(false);
 
 function sendInstallUpdate() {
-  showModalUpdateDownloaded = false;
+  showModalUpdateDownloaded.value = false;
   ipcRenderer.send("installUpdate");
 }
 
@@ -156,7 +156,11 @@ provide("animeDownloadIndex", animeDownloadIndex);
 const user_data = ref(null);
 const user_anime_data = ref([]);
 const user_filtered_anime_data = ref([]);
-const nickname = ref("kolyazoloto");
+
+const nickname = ref("");
+if (localStorage.nickname) {
+  nickname.value = localStorage.nickname;
+}
 // const downloadBtnDisable = computed(() => {
 //   animeComponentRefs.value.some((el) => {
 //     console.log(el.downloadStart);
@@ -166,15 +170,38 @@ const nickname = ref("kolyazoloto");
 const downloadBtnDisable = ref(false);
 
 const dropped = ref(false);
-const watching = ref(true);
+if (localStorage.dropped) {
+  dropped.value = localStorage.dropped;
+}
+const watching = ref(false);
+if (localStorage.watching) {
+  watching.value = localStorage.watching;
+}
 const planned = ref(false);
+if (localStorage.planned) {
+  planned.value = localStorage.planned;
+}
 const completed = ref(false);
+if (localStorage.completed) {
+  completed.value = localStorage.completed;
+}
+
 const filterstr = ref("");
 const willDownloadOpenings = ref(true);
+if (localStorage.willDownloadOpenings) {
+  willDownloadOpenings.value = localStorage.willDownloadOpenings;
+}
 provide("willDownloadOpenings", willDownloadOpenings);
 const willDownloadEndings = ref(false);
+if (localStorage.willDownloadEndings) {
+  willDownloadEndings.value = localStorage.willDownloadEndings;
+}
 provide("willDownloadEndings", willDownloadEndings);
-const downloadDir = ref("C:/Users/Nikolay/Desktop/testest/");
+
+const downloadDir = ref("C:/Users/Nikolay/Desktop/testest");
+if (localStorage.downloadDir) {
+  downloadDir.value = localStorage.downloadDir;
+}
 provide("downloadDir", downloadDir);
 const isDownloadingAll = ref(false);
 
@@ -220,6 +247,7 @@ async function getJSON(url) {
   return await response.json();
 }
 async function getAllData() {
+  localStorage.nickname = nickname.value;
   user_data.value = null;
   user_anime_data.value = [];
   user_filtered_anime_data.value = [];
@@ -256,6 +284,71 @@ async function getAllData() {
   //   filter_data();
   // }
 }
+// localStorage
+
+let downloadDirTimer;
+watch(downloadDir, (value) => {
+  if (downloadDirTimer !== undefined) {
+    clearTimeout(downloadDirTimer);
+  }
+  downloadDirTimer = setTimeout(() => {
+    localStorage.downloadDir = value;
+  }, 1000);
+});
+let droppedTimer;
+watch(dropped, (value) => {
+  if (droppedTimer !== undefined) {
+    clearTimeout(droppedTimer);
+  }
+  droppedTimer = setTimeout(() => {
+    localStorage.dropped = value;
+  }, 1000);
+});
+let watchingTimer;
+watch(watching, (value) => {
+  if (watchingTimer !== undefined) {
+    clearTimeout(watchingTimer);
+  }
+  watchingTimer = setTimeout(() => {
+    localStorage.watching = value;
+  }, 1000);
+});
+let plannedTimer;
+watch(planned, (value) => {
+  if (plannedTimer !== undefined) {
+    clearTimeout(plannedTimer);
+  }
+  plannedTimer = setTimeout(() => {
+    localStorage.planned = value;
+  }, 1000);
+});
+let completedTimer;
+watch(completed, (value) => {
+  if (completedTimer !== undefined) {
+    clearTimeout(completedTimer);
+  }
+  completedTimer = setTimeout(() => {
+    localStorage.completed = value;
+  }, 1000);
+});
+let willDownloadOpeningsTimer;
+watch(willDownloadOpenings, (value) => {
+  if (willDownloadOpeningsTimer !== undefined) {
+    clearTimeout(willDownloadOpeningsTimer);
+  }
+  completedTimer = setTimeout(() => {
+    localStorage.willDownloadOpenings = value;
+  }, 1000);
+});
+let willDownloadEndingsTimer;
+watch(willDownloadEndings, (value) => {
+  if (willDownloadEndingsTimer !== undefined) {
+    clearTimeout(willDownloadEndingsTimer);
+  }
+  completedTimer = setTimeout(() => {
+    localStorage.willDownloadEndings = value;
+  }, 1000);
+});
 
 await getAllData();
 </script>
