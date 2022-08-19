@@ -1,6 +1,6 @@
 {
   "name": "Aniop",
-  "version": "0.0.5",
+  "version": "0.0.6",
   "description": "Download anime openings and endings",
   "main": "build/main/main.js",
   "scripts": {
