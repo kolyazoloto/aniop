@@ -88,9 +88,9 @@ ipcMain.on("download", (event, info) => {
 });
 
 autoUpdater.on("update-available", () => {
-  mainWindow.webContents.send(`update-available`);
+  mainWindow.webContents.send(`my-update-available`);
 });
 autoUpdater.on("update-downloaded", (data) => {
   console.log(data);
-  mainWindow.webContents.send(`update-downloaded`);
+  mainWindow.webContents.send(`my-update-downloaded`);
 });

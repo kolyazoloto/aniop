@@ -142,10 +142,12 @@ function sendInstallUpdate() {
 }
 
 //recieve auto updater massages from main process
-window.api.receive("update-available", () => {
+window.api.receive("my-update-available", () => {
+  console.log("update-available");
   showModalUpdateAvailable.value = true;
 });
-window.api.receive("update-downloaded", () => {
+window.api.receive("my-update-downloaded", () => {
+  console.log("update-downloaded");
   showModalUpdateDownloaded.value = true;
 });
 
