@@ -87,10 +87,10 @@ ipcMain.on("download", (event, info) => {
     );
 });
 
-// autoUpdater.on("update-available", () => {
-//   mainWindow.webContents.send(`update-available`);
-// });
-// autoUpdater.on("update-downloaded", (data) => {
-//   console.log(data);
-//   mainWindow.webContents.send(`update-downloaded`);
-// });
+autoUpdater.on("update-available", () => {
+  mainWindow.webContents.send(`update-available`);
+});
+autoUpdater.on("update-downloaded", (data) => {
+  console.log(data);
+  mainWindow.webContents.send(`update-downloaded`);
+});
