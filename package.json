@@ -34,11 +34,13 @@
     "vite": "^2.9.9"
   },
   "dependencies": {
+    "electron-updater": "^5.2.1",
     "node": "^18.7.0",
     "request": "^2.88.2",
-    "electron-updater": "^5.2.1",
     "request-progress": "^3.0.0",
     "vue": "^3.2.36",
+    "vue-final-modal": "^3.4.4",
+    "vue-toastify": "^1.8.1",
     "vue3-circle-progress": "^1.0.7"
   }
 }

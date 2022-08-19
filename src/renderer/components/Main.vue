@@ -1,5 +1,23 @@
 <template>
   <div class="main">
+    <vue-final-modal class="vue-final-modal" v-model="showModalUpdateAvailable">
+      <div class="modal">
+        Update available
+        <button @click="showModalUpdateAvailable = false">Ok</button>
+      </div>
+    </vue-final-modal>
+
+    <vue-final-modal
+      class="vue-final-modal"
+      v-model="showModalUpdateDownloaded"
+    >
+      <div class="modal">
+        Update downloaded!!!
+        <button @click="sendInstallUpdate">Install</button>
+        <button @click="showModalUpdateDownloaded = false">Later</button>
+      </div>
+    </vue-final-modal>
+
     <div class="main__left">
       <div class="main__user">
         <div class="main__user-data" v-if="user_data != null">
@@ -110,7 +128,26 @@
 
 <script setup>
 import AnimeComponent from "./AnimeComponent.vue";
+import { $vfm, VueFinalModal, ModalsContainer } from "vue-final-modal";
+import { ipcRenderer } from "../electron";
 import { ref, provide, computed } from "vue";
+
+// auto updater
+const showModalUpdateAvailable = ref(false);
+const showModalUpdateDownloaded = ref(false);
+
+function sendInstallUpdate() {
+  showModalUpdateDownloaded = false;
+  ipcRenderer.send("installUpdate");
+}
+
+//recieve auto updater massages from main process
+window.api.receive("update-available", () => {
+  showModalUpdateAvailable.value = true;
+});
+window.api.receive("update-downloaded", () => {
+  showModalUpdateDownloaded.value = true;
+});
 
 const animeComponentRefs = ref([]);
 const animeDownloadIndex = ref(-1);
@@ -379,5 +416,39 @@ await getAllData();
 .main__download-btn {
   margin-top: 8px;
   grid-column: 1/-1;
+}
+
+.modal {
+  position: absolute;
+  left: 50%;
+  top: 50%;
+  background-color: var(--thirdColor);
+  color: var(--textColor);
+  width: max-content;
+  transform: translateX(-50%) translateY(-50%);
+  display: flex;
+  align-items: center;
+  flex-direction: column;
+  padding: 8px;
+  font-weight: 700;
+  box-shadow: rgb(50 50 93 / 25%) 1px 3px 6px 0px,
+    rgb(0 0 0 / 30%) 0px 3px 7px -3px;
+  border: 2px solid var(--accentColor);
+  border-radius: 2px;
+}
+.modal > button {
+  margin-top: 8px;
+  padding: 2px 16px;
+  width: fit-content;
+  border: 1px solid var(--accentColor);
+  border-radius: 5px;
+  cursor: pointer;
+  transition: background 0.3s ease-in-out, border 0.3s ease-in-out;
+  box-shadow: rgba(0, 0, 0, 0.02) 0px 1px 3px 0px,
+    rgba(27, 31, 35, 0.15) 0px 0px 0px 1px;
+  background-color: var(--secondColor);
+}
+.modal > button:hover {
+  background-color: var(--accentColor);
 }
 </style>

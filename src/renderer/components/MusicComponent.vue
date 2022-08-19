@@ -103,10 +103,19 @@ async function downloadClickHandler() {
   url = await parseOSANIME(props.musicData.songName, props.musicData.authors);
 
   if (url == null) {
+    url = await parseALLMP3SU(
+      props.musicData.songName,
+      props.musicData.authors
+    );
+  }
+  if (url == null) {
     url = await parseMP3PARTY(
       props.musicData.songName,
       props.musicData.authors
     );
+  }
+  if (url == null) {
+    url = await parseKACHEVO(props.musicData.songName, props.musicData.authors);
   }
   if (url == null) {
     url = await parseMUZOFOND(
@@ -115,7 +124,6 @@ async function downloadClickHandler() {
       props.musicData.originalName
     );
   }
-
   // else if (selectValue.value == "Youtube") url = youtubeurl;
   console.log(url);
   //send download request
@@ -387,6 +395,134 @@ async function parseMP3PARTY(song, auth, searchOnlyName = false) {
     console.log(err);
     if (err.type === 0 && !searchOnlyName) {
       return await parseMP3PARTY(song, auth, true);
+    } else return null;
+  }
+}
+
+async function parseALLMP3SU(song, auth, searchOnlyName = false) {
+  try {
+    let url = "https://allmp3.su/music/";
+    let songName = song.toLowerCase();
+    let author = auth.toLowerCase();
+
+    let fullURL =
+      url +
+      `${author.replaceAll(" ", "%20")}%20${songName.replaceAll(" ", "%20")}`;
+
+    if (searchOnlyName) fullURL = url + `${songName.replaceAll(" ", "%20")}`;
+    // let backwardsUrl =
+    //   url +
+    //   `${songName.replaceAll(" ", "%20")}+${author.replaceAll(" ", "%20")}`;
+    // let onlySongNameUrl = url + `${songName.replaceAll(" ", "%20")}`;
+
+    let dom = await getPage(fullURL);
+    if (dom == undefined)
+      throw { type: 5, text: "cannot get page  " + fullURL };
+    let fetchresults = Array.from(dom.querySelectorAll(".item-track.song"));
+    // console.log(fetchresults);
+    let result = fetchresults.find((el) => {
+      let tempSongName = el.getAttribute("data-track-title").toLowerCase();
+      let tempAuthor = el.getAttribute("data-artist").toLowerCase();
+      if (tempSongName.includes("rus")) {
+        console.log(
+          "WARNING RUSSION OPENING ADAPTATION!!!!!!!!!!!!!   " + songName
+        );
+        return false;
+      }
+      if (tempSongName.includes("instrumental")) {
+        console.log(
+          "WARNING INSTRUMENTAL OPENING ADAPTATION!!!!!!!!!!!!!   " + songName
+        );
+        return false;
+      }
+      if (searchOnlyName) {
+        return author.includes(tempAuthor.split(" ")[0]);
+      }
+      return tempSongName.includes(songName);
+      //  && tempAuthor.includes(author);
+    });
+    // if (searchOnlyName) console.log(result);
+    if (result != undefined) {
+      let musicUrl = "https:" + result.getAttribute("data-file");
+      let fetchresponse = await fetch(musicUrl);
+      // console.log(fetchresponse);
+      if (!fetchresponse.ok)
+        throw { type: 1, text: "Broken url(cannot get music url)" };
+      return musicUrl;
+    } else {
+      console.error("Тaкой песни нет   --  " + fullURL);
+      // reject({ type: 0, text: "no song found" });
+      throw { type: 0, text: "no song found" };
+    }
+  } catch (err) {
+    console.log(err);
+    if (err.type === 0 && !searchOnlyName) {
+      return await parseALLMP3SU(song, auth, true);
+    } else return null;
+  }
+}
+
+async function parseKACHEVO(song, auth, searchOnlyName = false) {
+  try {
+    let url = "https://rum.kachevo.org/search?q=";
+    let songName = song.toLowerCase();
+    let author = auth.toLowerCase();
+
+    let fullURL =
+      url + `${author.replaceAll(" ", "+")}+${songName.replaceAll(" ", "+")}`;
+    if (searchOnlyName) fullURL = url + `${songName.replaceAll(" ", "+")}`;
+    let dom = await getPage(fullURL);
+    if (dom == undefined)
+      throw { type: 5, text: "cannot get page  " + fullURL };
+    let fetchresults = Array.from(
+      dom.querySelectorAll(".playlist-list>.playlist-item")
+    );
+    // console.log(fetchresults);
+    let result = fetchresults.find((el) => {
+      let tempSongName = el
+        .querySelector(".playlist-item-info>.playlist-item-title>p")
+        .textContent.toLowerCase();
+      let tempAuthor = el
+        .querySelector(".playlist-item-info>.playlist-item-subtitle>p")
+        .textContent.toLowerCase();
+      if (tempSongName.includes("rus")) {
+        console.log(
+          "WARNING RUSSION OPENING ADAPTATION!!!!!!!!!!!!!   " + songName
+        );
+        return false;
+      }
+      if (tempSongName.includes("instrumental")) {
+        console.log(
+          "WARNING INSTRUMENTAL OPENING ADAPTATION!!!!!!!!!!!!!   " + songName
+        );
+        return false;
+      }
+      if (searchOnlyName) {
+        return author.includes(tempAuthor.split(" ")[0]);
+      }
+      return tempSongName.includes(songName);
+      //  && tempAuthor.includes(author);
+    });
+    // if (searchOnlyName) console.log(result);
+    if (result != undefined) {
+      let musicUrl = result
+        .querySelector(".playlist-item-play")
+        .getAttribute("data-url");
+
+      let fetchresponse = await fetch(musicUrl);
+      if (!fetchresponse.ok)
+        throw { type: 1, text: "Broken url(cannot get music url)" };
+
+      return musicUrl;
+    } else {
+      console.error("Тaкой песни нет   --  " + fullURL);
+      // reject({ type: 0, text: "no song found" });
+      throw { type: 0, text: "no song found" };
+    }
+  } catch (err) {
+    console.log(err);
+    if (err.type === 0 && !searchOnlyName) {
+      return await parseKACHEVO(song, auth, true);
     } else return null;
   }
 }

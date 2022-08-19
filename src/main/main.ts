@@ -45,7 +45,7 @@ app.whenReady().then(() => {
     details.requestHeaders["User-Agent"] = "aniop";
     callback({ cancel: false, requestHeaders: details.requestHeaders });
   });
-  autoUpdater.checkForUpdatesAndNotify();
+  autoUpdater.checkForUpdates();
 });
 
 app.on("window-all-closed", function () {
@@ -54,6 +54,9 @@ app.on("window-all-closed", function () {
 
 ipcMain.on("message", (event, message) => {
   console.log(message);
+});
+ipcMain.on("installUpdate", () => {
+  autoUpdater.quitAndInstall();
 });
 ipcMain.on("download", (event, info) => {
   progress(request(info.url), {
@@ -83,3 +86,11 @@ ipcMain.on("download", (event, info) => {
       fs.createWriteStream(info.properties.directory + info.properties.filename)
     );
 });
+
+// autoUpdater.on("update-available", () => {
+//   mainWindow.webContents.send(`update-available`);
+// });
+// autoUpdater.on("update-downloaded", (data) => {
+//   console.log(data);
+//   mainWindow.webContents.send(`update-downloaded`);
+// });
