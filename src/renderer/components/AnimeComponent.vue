@@ -154,7 +154,21 @@ const emit = defineEmits(["downloadAllComplete", "downloadAllStarted"]);
 
 const anime_id = props.animeId;
 
-const endandop = await loadMal();
+// Паршу myanimelist и достаю названия песен.
+
+const songsNamesMemory = inject("songsNamesMemory");
+let endandop;
+if (songsNamesMemory.value[anime_id] !== undefined) {
+  console.log("Песни есть в памяти");
+  endandop = songsNamesMemory.value[anime_id];
+} else {
+  console.log("Песен нет в памяти парсю майанимелист");
+  endandop = await loadMal();
+  songsNamesMemory.value[anime_id] = endandop;
+}
+
+// console.log(songsNamesMemory.value);
+
 const openings = endandop[0];
 const endings = endandop[1];
 const willDownloadOpenings = inject("willDownloadOpenings");
@@ -257,18 +271,18 @@ function downloadAll() {
   // successDownloadCounter.value = 0;
   if (willDownloadOpenings.value && !willDownloadEndings.value) {
     openingMusicRefs.value.forEach(async (el) => {
-      await el.downloadClickHandler();
+      el.downloadClickHandler();
     });
   } else if (!willDownloadOpenings.value && willDownloadEndings.value) {
     endingMusicRefs.value.forEach(async (el) => {
-      await el.downloadClickHandler();
+      el.downloadClickHandler();
     });
   } else if (willDownloadOpenings.value && willDownloadEndings.value) {
     openingMusicRefs.value.forEach(async (el) => {
-      await el.downloadClickHandler();
+      el.downloadClickHandler();
     });
     endingMusicRefs.value.forEach(async (el) => {
-      await el.downloadClickHandler();
+      el.downloadClickHandler();
     });
   }
 }
@@ -282,6 +296,7 @@ async function getPage(url) {
 }
 
 async function loadMal() {
+  console.log("ИЩЮЮЮЮЮ");
   let url = "https://myanimelist.net/anime/" + anime_id;
   let dom = await getPage(url);
   // console.log(dom);

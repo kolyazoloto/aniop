@@ -120,18 +120,19 @@
     </div>
 
     <div class="main__animes">
-      <Suspense v-for="(i, index) in user_anime_data">
-        <AnimeComponent
-          :key="index"
-          ref="animeComponentRefs"
-          :index="index"
-          :animeId="i.anime.id"
-          :animeImg="'https://shikimori.one/' + i.anime.image.preview"
-          :animeTitle="i.anime.name"
-          @downloadAllComplete="downloadCompleteHandler"
-        ></AnimeComponent>
-        <!-- <template #fallback> Loading... </template> -->
-      </Suspense>
+      <TransitionGroup name="fade">
+        <Suspense v-for="(i, index) in user_filtered_anime_data" :key="index">
+          <AnimeComponent
+            ref="animeComponentRefs"
+            :index="index"
+            :animeId="i.anime.id"
+            :animeImg="'https://shikimori.one/' + i.anime.image.preview"
+            :animeTitle="i.anime.name"
+            @downloadAllComplete="downloadCompleteHandler"
+          ></AnimeComponent>
+          <!-- <template #fallback> Loading... </template> -->
+        </Suspense>
+      </TransitionGroup>
     </div>
   </div>
 </template>
@@ -244,25 +245,30 @@ function downloadCompleteHandler(index) {
   }
   animeDownloadIndex.value++;
 }
+//////////////////////////
+
+// openings and endings songs names memory
+
+const songsNamesMemory = ref({});
+provide("songsNamesMemory", songsNamesMemory);
 
 //Получаем файлы в дериктории
 let dirFiles = [];
 if (downloadDir.value != "") {
   dirFiles = await window.fs.readdir(downloadDir.value);
 }
-
 provide("dirFiles", dirFiles);
 // //////////////
 function filter_data() {
-  // if (filterstr.value.length > 0) {
-  //   user_filtered_anime_data.value = user_anime_data.value.filter((el) => {
-  //     return (
-  //       el.anime.name.toLowerCase().includes(filterstr.value.toLowerCase()) ||
-  //       el.anime.russian.toLowerCase().includes(filterstr.value.toLowerCase())
-  //     );
-  //   });
-  //   console.log(user_filtered_anime_data.value);
-  // } else user_filtered_anime_data.value = user_anime_data.value;
+  if (filterstr.value.length > 0) {
+    user_filtered_anime_data.value = user_anime_data.value.filter((el) => {
+      return (
+        el.anime.name.toLowerCase().includes(filterstr.value.toLowerCase()) ||
+        el.anime.russian.toLowerCase().includes(filterstr.value.toLowerCase())
+      );
+    });
+    // console.log(user_filtered_anime_data.value);
+  } else user_filtered_anime_data.value = user_anime_data.value;
 }
 async function getJSON(url) {
   const response = await fetch(url);
@@ -302,9 +308,9 @@ async function getAllData() {
     );
     user_anime_data.value.push(...plannedArr);
   }
-  // if (user_anime_data.value.length > 0) {
-  //   filter_data();
-  // }
+  if (user_anime_data.value.length > 0) {
+    filter_data();
+  }
 }
 // localStorage
 
