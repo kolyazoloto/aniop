@@ -9,6 +9,16 @@
       </p>
     </div>
 
+    <Transition name="fade">
+      <p
+        class="downloadSpeed"
+        v-if="downloadPercent > 0 && downloadPercent < 100"
+      >
+        {{ downloadSpeed }}
+        <span>MB/s</span>
+      </p>
+    </Transition>
+
     <div class="download-btn-wrapper">
       <Transition name="fade" mode="out-in">
         <div class="download-error" key="0" v-if="downloadError">
@@ -38,6 +48,7 @@
           v-else-if="downloadPercent == 0"
           key="3"
           class="download-btn"
+          :class="{ disable: downloadAllActive }"
           @click="downloadClickHandler"
         >
           <svg class="download-btn__downdload-svg" viewBox="0 0 24 24">
@@ -48,12 +59,7 @@
     </div>
   </div>
 </template>
-<!-- v-if="
-        muzofondurl != null ||
-        osanimeurl != null ||
-        youtubeurl != null ||
-        mp3partyurl != null
-      " -->
+
 <script setup>
 import { onMounted, ref, inject } from "vue";
 import { ipcRenderer } from "../electron";
@@ -63,10 +69,14 @@ import CircleProgress from "vue3-circle-progress";
 const downloadDir = inject("downloadDir");
 const dirFiles = inject("dirFiles");
 
+// download all
+const downloadAllActive = inject("downloadAllActive");
+
 const emit = defineEmits(["downloadComplete"]);
 const props = defineProps(["musicData", "type"]);
 let selectValue = ref("");
 let downloadPercent = ref(0);
+let downloadSpeed = ref(0);
 let downloadError = ref(false);
 let downloadFinished = ref(false);
 isDownloadedAtStart();
@@ -96,27 +106,18 @@ function makeid(length) {
 async function downloadClickHandler() {
   if (downloadFinished.value) return;
   let url;
-  // if (selectValue.value == "Muzofond") url = mp3partyurl;
-  // else if (selectValue.value == "Mp3partyurl") url = muzofondurl;
-  // else if (selectValue.value == "Osanime") url = osanimeurl;
+
+  // url = await parseHITSTER(props.musicData.songName, props.musicData.authors);
 
   url = await parseOSANIME(props.musicData.songName, props.musicData.authors);
 
-  if (url == null) {
-    url = await parseALLMP3SU(
-      props.musicData.songName,
-      props.musicData.authors
-    );
-  }
   if (url == null) {
     url = await parseMP3PARTY(
       props.musicData.songName,
       props.musicData.authors
     );
   }
-  if (url == null) {
-    url = await parseKACHEVO(props.musicData.songName, props.musicData.authors);
-  }
+
   if (url == null) {
     url = await parseMUZOFOND(
       props.musicData.songName,
@@ -124,6 +125,10 @@ async function downloadClickHandler() {
       props.musicData.originalName
     );
   }
+  // if (url == null) {
+  //   url = await parseKACHEVO(props.musicData.songName, props.musicData.authors);
+  // }
+
   // else if (selectValue.value == "Youtube") url = youtubeurl;
   console.log(url);
   //send download request
@@ -147,7 +152,10 @@ async function downloadClickHandler() {
         downloadFinished.value = true;
         emit("downloadComplete", { ok: true, type: props.type });
         window.api.electronIpcRemoveAllListeners(`download_${id}`);
-      } else downloadPercent.value = Math.round(data.state.percent * 100);
+      } else {
+        downloadSpeed.value = (data.state.speed * 0.00001).toFixed(2);
+        downloadPercent.value = Math.round(data.state.percent * 100);
+      }
     });
   } else {
     // error
@@ -337,6 +345,18 @@ async function parseMP3PARTY(song, auth, searchOnlyName = false) {
         );
         return false;
       }
+      if (tempSongName.includes("piano")) {
+        console.log(
+          "WARNING PIANO OPENING ADAPTATION!!!!!!!!!!!!!   " + songName
+        );
+        return false;
+      }
+      if (tempSongName.includes("karaoke")) {
+        console.log(
+          "WARNING KARAOKE OPENING ADAPTATION!!!!!!!!!!!!!   " + songName
+        );
+        return false;
+      }
       // console.log([temp, tempSongName, tempAuthor]);
       // console.log(songName);
       // console.log(tempSongName.includes(songName));
@@ -435,6 +455,18 @@ async function parseALLMP3SU(song, auth, searchOnlyName = false) {
         );
         return false;
       }
+      if (tempSongName.includes("piano")) {
+        console.log(
+          "WARNING PIANO OPENING ADAPTATION!!!!!!!!!!!!!   " + songName
+        );
+        return false;
+      }
+      if (tempSongName.includes("karaoke")) {
+        console.log(
+          "WARNING KARAOKE OPENING ADAPTATION!!!!!!!!!!!!!   " + songName
+        );
+        return false;
+      }
       if (searchOnlyName) {
         return author.includes(tempAuthor.split(" ")[0]);
       }
@@ -497,6 +529,18 @@ async function parseKACHEVO(song, auth, searchOnlyName = false) {
         );
         return false;
       }
+      if (tempSongName.includes("piano")) {
+        console.log(
+          "WARNING PIANO OPENING ADAPTATION!!!!!!!!!!!!!   " + songName
+        );
+        return false;
+      }
+      if (tempSongName.includes("karaoke")) {
+        console.log(
+          "WARNING KARAOKE OPENING ADAPTATION!!!!!!!!!!!!!   " + songName
+        );
+        return false;
+      }
       if (searchOnlyName) {
         return author.includes(tempAuthor.split(" ")[0]);
       }
@@ -527,6 +571,97 @@ async function parseKACHEVO(song, auth, searchOnlyName = false) {
   }
 }
 
+// async function parseHITSTER(song, auth, searchOnlyName = false) {
+//   try {
+//     let url = "https://rum.kachevo.org/search?q=";
+//     let songName = song.toLowerCase();
+//     let author = auth.toLowerCase();
+
+//     let fullURL =
+//       url + `${author.replaceAll(" ", "+")}+${songName.replaceAll(" ", "+")}`;
+//     if (searchOnlyName) fullURL = url + `${songName.replaceAll(" ", "+")}`;
+
+//     let dom = await fetch(
+//       "https://api-vk.com/musicandyears.com.php?q=PAINT%20%20I%20Don%27t%20Like%20Mondays.&pjax=true",
+//       {
+//         headers: {
+//           accept: "*/*",
+//           "accept-language": "ru-RU,ru;q=0.9,en-US;q=0.8,en;q=0.7",
+//           "sec-ch-ua":
+//             '"Chromium";v="104", " Not A;Brand";v="99", "Google Chrome";v="104"',
+//           "sec-ch-ua-mobile": "?0",
+//           "sec-ch-ua-platform": '"Windows"',
+//           "sec-fetch-dest": "empty",
+//           "sec-fetch-mode": "cors",
+//           "sec-fetch-site": "cross-site",
+//           "x-requested-with": "XMLHttpRequest",
+//         },
+//         referrer: "https://hitster.fm/",
+//         referrerPolicy: "strict-origin-when-cross-origin",
+//         body: null,
+//         method: "GET",
+//         mode: "cors",
+//         credentials: "omit",
+//       }
+//     );
+//     let a = await dom.text();
+//     console.log(dom);
+//     // let dom = await getPage(fullURL);
+//     // if (dom == undefined)
+//     //   throw { type: 5, text: "cannot get page  " + fullURL };
+//     // let fetchresults = Array.from(
+//     //   dom.querySelectorAll(".playlist-list>.playlist-item")
+//     // );
+//     // // console.log(fetchresults);
+//     // let result = fetchresults.find((el) => {
+//     //   let tempSongName = el
+//     //     .querySelector(".playlist-item-info>.playlist-item-title>p")
+//     //     .textContent.toLowerCase();
+//     //   let tempAuthor = el
+//     //     .querySelector(".playlist-item-info>.playlist-item-subtitle>p")
+//     //     .textContent.toLowerCase();
+//     //   if (tempSongName.includes("rus")) {
+//     //     console.log(
+//     //       "WARNING RUSSION OPENING ADAPTATION!!!!!!!!!!!!!   " + songName
+//     //     );
+//     //     return false;
+//     //   }
+//     //   if (tempSongName.includes("instrumental")) {
+//     //     console.log(
+//     //       "WARNING INSTRUMENTAL OPENING ADAPTATION!!!!!!!!!!!!!   " + songName
+//     //     );
+//     //     return false;
+//     //   }
+//     //   if (searchOnlyName) {
+//     //     return author.includes(tempAuthor.split(" ")[0]);
+//     //   }
+//     //   return tempSongName.includes(songName);
+//     //   //  && tempAuthor.includes(author);
+//     // });
+//     // // if (searchOnlyName) console.log(result);
+//     // if (result != undefined) {
+//     //   let musicUrl = result
+//     //     .querySelector(".playlist-item-play")
+//     //     .getAttribute("data-url");
+
+//     //   let fetchresponse = await fetch(musicUrl);
+//     //   if (!fetchresponse.ok)
+//     //     throw { type: 1, text: "Broken url(cannot get music url)" };
+
+//     //   return musicUrl;
+//     // } else {
+//     //   console.error("Тaкой песни нет   --  " + fullURL);
+//     //   // reject({ type: 0, text: "no song found" });
+//     //   throw { type: 0, text: "no song found" };
+//     // }
+//   } catch (err) {
+//     console.log(err);
+//     // if (err.type === 0 && !searchOnlyName) {
+//     //   return await parseKACHEVO(song, auth, true);
+//     // } else return null;
+//   }
+// }
+
 defineExpose({ downloadClickHandler });
 
 // $emit('downloadEmit',{musicData.url, musicData.songName, musicData.authors})
@@ -539,6 +674,7 @@ defineExpose({ downloadClickHandler });
   gap: 16px;
   padding-block: 10px;
   align-items: center;
+
   /* background-color: var(--thirdColor); */
 }
 .songBar + .songBar::after {
@@ -552,6 +688,7 @@ defineExpose({ downloadClickHandler });
 }
 
 .songBar__title {
+  margin-right: auto;
 }
 .songBar__songname {
   font-weight: 600;
@@ -564,8 +701,15 @@ defineExpose({ downloadClickHandler });
   line-height: 13px;
   font-weight: 400;
 }
+.downloadSpeed {
+  font-size: clamp(6px, 1.5vw, 12px);
+  line-height: 13px;
+  font-weight: 400;
+}
+.downloadSpeed > span {
+  font-size: clamp(5px, 1.3vw, 10px);
+}
 .percent {
-  margin-left: auto;
   margin-right: 50px;
 }
 .download-select {
@@ -606,7 +750,6 @@ defineExpose({ downloadClickHandler });
   fill: rgb(218, 51, 51);
 }
 .download-btn-wrapper {
-  margin-left: auto;
   margin-right: 10px;
 }
 .download-btn {

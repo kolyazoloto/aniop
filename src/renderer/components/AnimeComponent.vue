@@ -1,6 +1,13 @@
 <template>
   <Transition name="fade" appear>
-    <div class="animeComponentWrapper">
+    <div
+      class="animeComponentWrapper"
+      ref="animeComponentWrapper"
+      :class="{
+        'animeComponentWrapper--downloading':
+          !downloadFinished && downloadStart,
+      }"
+    >
       <img :src="animeImg" alt="" class="animeImg" />
       <div class="accordionsWrapper">
         <div class="accordionsWrapper__top">
@@ -31,6 +38,7 @@
                 </div>
                 <button
                   class="download_all"
+                  :class="{ disable: downloadAllActive }"
                   @click="downloadAll"
                   v-else-if="!downloadFinished && !downloadStart"
                   key="0"
@@ -137,6 +145,10 @@ import MusicComponent from "./MusicComponent.vue";
 import CircleProgress from "vue3-circle-progress";
 import { onMounted, ref, computed, watch, inject } from "vue";
 
+// refs
+const animeComponentWrapper = ref(null);
+//
+
 const props = defineProps(["animeId", "animeImg", "animeTitle", "index"]);
 const emit = defineEmits(["downloadAllComplete", "downloadAllStarted"]);
 
@@ -161,6 +173,9 @@ const totalAnimeLength = computed(() => {
   else if (willDownloadOpenings.value && willDownloadEndings.value)
     return openingMusicRefs.value.length + endingMusicRefs.value.length;
 });
+
+// download all
+const downloadAllActive = inject("downloadAllActive");
 
 // download counter
 const downloadOpeningsCounter = ref(0);
@@ -200,9 +215,13 @@ watch(downloadFinished, (newVal) => {
 // watch download start when change index
 const animeDownloadIndex = inject("animeDownloadIndex");
 watch(animeDownloadIndex, (value) => {
-  console.log(value);
+  // console.log(value);
   if (value === props.index) {
     downloadAll();
+    animeComponentWrapper.value.scrollIntoView({
+      block: "center",
+      behavior: "smooth",
+    });
   }
 });
 
@@ -370,7 +389,30 @@ defineExpose({
   border: 2px solid var(--secondColor);
   border-radius: 10px;
   padding: 8px;
+  background: transparent;
+  transition: background 0.7s ease-in-out, border 0.7s ease-in-out;
 }
+.animeComponentWrapper--downloading {
+  background: linear-gradient(
+    100deg,
+    var(--secondColor),
+    transparent,
+    var(--secondColor),
+    transparent
+  );
+  background-size: 300%;
+  animation: gradient_animation 3s infinite;
+  border-color: var(--textColor);
+}
+@keyframes gradient_animation {
+  from {
+    background-position-x: left;
+  }
+  to {
+    background-position-x: right;
+  }
+}
+
 .animeImg {
   width: 93px;
   height: max-content;

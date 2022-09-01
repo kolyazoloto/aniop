@@ -110,4 +110,9 @@ select {
     scroll-behavior: auto !important;
   }
 }
+
+.disable {
+  pointer-events: none;
+  opacity: 0.7;
+}
 </style>

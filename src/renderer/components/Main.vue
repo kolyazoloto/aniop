@@ -19,7 +19,7 @@
     </vue-final-modal>
 
     <div class="main__left">
-      <div class="main__user">
+      <div class="main__user" :class="{ disable: downloadAllActive }">
         <div class="main__user-data" v-if="user_data != null">
           <img class="main__user-img" :src="user_data.avatar" />
           <div class="main__user-info">
@@ -71,7 +71,7 @@
         :css-classes="'chart'"
       /> -->
       </div>
-      <div class="main__filter">
+      <div class="main__filter" :class="{ disable: downloadAllActive }">
         <p class="main__filter-title">Anime filter {{}}</p>
         <div class="main__input-wrapper">
           <input class="main__input-input" v-model="filterstr" />
@@ -80,32 +80,42 @@
           </button>
         </div>
       </div>
-      <div class="main__settings">
+      <div class="main__settings" :class="{ disable: downloadAllActive }">
         <label class="main__settings-path"> Download path </label>
         <input type="text" class="main__settings-input" v-model="downloadDir" />
       </div>
       <div class="main__download">
-        <label class="checkbox">
+        <label class="checkbox" :class="{ disable: downloadAllActive }">
           <input type="checkbox" v-model="willDownloadOpenings" />
           <span class="checkbox__checkmark">
             <div class="checkbox__checkmark-fill"></div>
           </span>
           Openings
         </label>
-        <label class="checkbox">
+        <label class="checkbox" :class="{ disable: downloadAllActive }">
           <input type="checkbox" v-model="willDownloadEndings" />
           <span class="checkbox__checkmark">
             <div class="checkbox__checkmark-fill"></div>
           </span>
           Endings
         </label>
-        <button
-          class="main__download-btn"
-          :class="{ disabled: downloadBtnDisable }"
-          @click="downloadAllAnime"
-        >
-          Download
-        </button>
+        <Transition name="fade" mode="out-in">
+          <button
+            class="main__download-btn"
+            v-if="!downloadAllActive"
+            @click="downloadAllAnime"
+          >
+            Download
+          </button>
+          <button
+            class="main__download-btn"
+            :class="{ disable: stopDownloading }"
+            v-else
+            @click="stopDownloadAllAnime"
+          >
+            Stop
+          </button>
+        </Transition>
       </div>
     </div>
 
@@ -152,8 +162,10 @@ window.api.receive("my-update-downloaded", () => {
 });
 
 const animeComponentRefs = ref([]);
+// -1 not downloading
 const animeDownloadIndex = ref(-1);
 provide("animeDownloadIndex", animeDownloadIndex);
+const stopDownloading = ref(false);
 
 const user_data = ref(null);
 const user_anime_data = ref([]);
@@ -163,44 +175,41 @@ const nickname = ref("");
 if (localStorage.nickname) {
   nickname.value = localStorage.nickname;
 }
-// const downloadBtnDisable = computed(() => {
-//   animeComponentRefs.value.some((el) => {
-//     console.log(el.downloadStart);
-//     return el.downloadStart;
-//   });
-// });
-const downloadBtnDisable = ref(false);
+const downloadAllActive = computed(() => {
+  return animeDownloadIndex.value !== -1;
+});
+provide("downloadAllActive", downloadAllActive);
 
 const dropped = ref(false);
 if (localStorage.dropped) {
-  dropped.value = localStorage.dropped;
+  dropped.value = localStorage.dropped === "true";
 }
 const watching = ref(false);
 if (localStorage.watching) {
-  watching.value = localStorage.watching;
+  watching.value = localStorage.watching === "true";
 }
 const planned = ref(false);
 if (localStorage.planned) {
-  planned.value = localStorage.planned;
+  planned.value = localStorage.planned === "true";
 }
 const completed = ref(false);
 if (localStorage.completed) {
-  completed.value = localStorage.completed;
+  completed.value = localStorage.completed === "true";
 }
 
 const filterstr = ref("");
 const willDownloadOpenings = ref(true);
 if (localStorage.willDownloadOpenings) {
-  willDownloadOpenings.value = localStorage.willDownloadOpenings;
+  willDownloadOpenings.value = localStorage.willDownloadOpenings === "true";
 }
 provide("willDownloadOpenings", willDownloadOpenings);
 const willDownloadEndings = ref(false);
 if (localStorage.willDownloadEndings) {
-  willDownloadEndings.value = localStorage.willDownloadEndings;
+  willDownloadEndings.value = localStorage.willDownloadEndings === "true";
 }
 provide("willDownloadEndings", willDownloadEndings);
 
-const downloadDir = ref("C:/Users/Nikolay/Desktop/testest");
+const downloadDir = ref("");
 if (localStorage.downloadDir) {
   downloadDir.value = localStorage.downloadDir;
 }
@@ -210,12 +219,12 @@ const isDownloadingAll = ref(false);
 function downloadAllAnime() {
   isDownloadingAll.value = true;
   animeDownloadIndex.value = 0;
-  // animeComponentRefs.value
-  //   .find((el) => {
-  //     return el.index == 0;
-  //   })
-  //   .downloadAll();
 }
+function stopDownloadAllAnime() {
+  console.log("Stop downloading.Waiting for the last download complete...");
+  stopDownloading.value = true;
+}
+
 function downloadCompleteHandler(index) {
   if (!isDownloadingAll.value) {
     console.log("Download all complete");
@@ -224,13 +233,24 @@ function downloadCompleteHandler(index) {
   }
   if (animeDownloadIndex.value + 1 == animeComponentRefs.value.length) {
     animeDownloadIndex.value = -1;
+    console.log("Download all complete");
+    return;
+  }
+  if (stopDownloading.value) {
+    animeDownloadIndex.value = -1;
+    stopDownloading.value = false;
+    isDownloadingAll.value = false;
     return;
   }
   animeDownloadIndex.value++;
 }
 
 //Получаем файлы в дериктории
-let dirFiles = await window.fs.readdir(downloadDir.value);
+let dirFiles = [];
+if (downloadDir.value != "") {
+  dirFiles = await window.fs.readdir(downloadDir.value);
+}
+
 provide("dirFiles", dirFiles);
 // //////////////
 function filter_data() {
@@ -259,28 +279,28 @@ async function getAllData() {
   let user_id = user_data.value.id;
 
   if (completed.value) {
-    let completed = await getJSON(
+    let completedArr = await getJSON(
       `https://shikimori.one/api/users/${user_id}/anime_rates?limit=5000&status=completed`
     );
-    user_anime_data.value.push(...completed);
+    user_anime_data.value.push(...completedArr);
   }
   if (watching.value) {
-    let watching = await getJSON(
+    let watchingArr = await getJSON(
       `https://shikimori.one/api/users/${user_id}/anime_rates?limit=5000&status=watching`
     );
-    user_anime_data.value.push(...watching);
+    user_anime_data.value.push(...watchingArr);
   }
   if (dropped.value) {
-    let dropped = await getJSON(
+    let droppedArr = await getJSON(
       `https://shikimori.one/api/users/${user_id}/anime_rates?limit=5000&status=dropped`
     );
-    user_anime_data.value.push(...dropped);
+    user_anime_data.value.push(...droppedArr);
   }
   if (planned.value) {
-    let planned = await getJSON(
+    let plannedArr = await getJSON(
       `https://shikimori.one/api/users/${user_id}/anime_rates?limit=5000&status=planned`
     );
-    user_anime_data.value.push(...planned);
+    user_anime_data.value.push(...plannedArr);
   }
   // if (user_anime_data.value.length > 0) {
   //   filter_data();
@@ -338,7 +358,7 @@ watch(willDownloadOpenings, (value) => {
   if (willDownloadOpeningsTimer !== undefined) {
     clearTimeout(willDownloadOpeningsTimer);
   }
-  completedTimer = setTimeout(() => {
+  willDownloadOpeningsTimer = setTimeout(() => {
     localStorage.willDownloadOpenings = value;
   }, 1000);
 });
@@ -347,7 +367,7 @@ watch(willDownloadEndings, (value) => {
   if (willDownloadEndingsTimer !== undefined) {
     clearTimeout(willDownloadEndingsTimer);
   }
-  completedTimer = setTimeout(() => {
+  willDownloadEndingsTimer = setTimeout(() => {
     localStorage.willDownloadEndings = value;
   }, 1000);
 });
@@ -452,7 +472,14 @@ await getAllData();
   flex: 1;
   flex-direction: column;
   gap: 5px;
+
+  /* snap */
+  /* scroll-padding-block: 4px;
+  scroll-snap-type: block mandatory; */
 }
+/* .main__animes > * {
+  scroll-snap-align: start;
+} */
 .main__input-checkboxWrapper {
   display: grid;
   grid-template-columns: 1fr 1fr;
@@ -545,5 +572,15 @@ await getAllData();
 }
 .modal > button:hover {
   background-color: var(--accentColor);
+}
+
+.fade-enter-active,
+.fade-leave-active {
+  transition: opacity 0.2s ease;
+}
+
+.fade-enter-from,
+.fade-leave-to {
+  opacity: 0;
 }
 </style>
