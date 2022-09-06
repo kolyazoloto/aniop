@@ -124,28 +124,29 @@ async function downloadClickHandler() {
   urls = urls.filter((el) => {
     return el !== null;
   });
-  let downloadUrl = urls[0];
+  // let downloadUrl = urls[0];
   console.log(urls);
 
-  // let stats = await Promise.all(
-  //   urls.map(async (el) => {
-  //     if (el != null) return fetch(el);
-  //     else return null;
-  //   })
-  // );
-  // let blobs = [];
-  // for (let i of stats) {
-  //   if (i != null) blobs.push({ url: i.url, blob: await i.blob() });
-  // }
-  // blobs.sort((prev, next) => {
-  //   // console.log(prev.blob.size - next.blob.size);
-  //   return next.blob.size - prev.blob.size;
-  // });
-  // console.log(blobs);
-  // let downloadUrl = blobs[0].url;
+  let stats = await Promise.all(
+    urls.map(async (el) => {
+      return fetch(el, { method: "HEAD" });
+    })
+  );
+
+  let blobs = [];
+  for (let i of stats) {
+    blobs.push({ url: i.url, size: Number(i.headers.get("content-length")) });
+  }
+
+  blobs.sort((prev, next) => {
+    // console.log(prev.blob.size - next.blob.size);
+    return next.size - prev.size;
+  });
+  console.log(blobs);
 
   // send download request
-  if (urls.length > 0) {
+  if (blobs.length > 0) {
+    let downloadUrl = blobs[0].url;
     let id = makeid(10);
     ipcRenderer.send("download", {
       url: downloadUrl,
@@ -265,10 +266,12 @@ async function parseMUZOFOND(song, auth, originalName) {
       .getAttribute("data-url");
 
     //проверяем на битость ссылки
-    let fetchresponse = await fetch(musicUrl);
+    let fetchresponse = await fetch(musicUrl, { method: "HEAD" });
 
     if (!fetchresponse.ok)
       throw { type: 1, text: "Broken url(cannot get music url)" };
+    if (!fetchresponse.headers.get("content-type").includes("audio/mpeg"))
+      throw { type: 7, text: "something wrong(content is not audio type)" };
 
     return musicUrl;
   } catch (err) {
@@ -306,7 +309,7 @@ async function parseOSANIME(song, auth) {
       if (dom2 == undefined)
         throw { type: 5, text: "cannot get page  " + fetchurl };
       let mp3url = dom2.querySelector(".kopler > a.btn").href;
-      let response = await fetch(mp3url);
+      let response = await fetch(mp3url, { method: "HEAD" });
       if (!response.ok)
         throw { type: 1, text: "Broken url(cannot get music url)" };
       return response.url;
@@ -413,10 +416,12 @@ async function parseMP3PARTY(song, auth, searchOnlyName = false) {
         mode: "cors",
         credentials: "include",
       });
-      let fetchresponse = await fetch(musicUrl);
+      let fetchresponse = await fetch(musicUrl, { method: "HEAD" });
       // console.log(fetchresponse);
       if (!fetchresponse.ok)
         throw { type: 1, text: "Broken url(cannot get music url)" };
+      if (!fetchresponse.headers.get("content-type").includes("audio/mpeg"))
+        throw { type: 7, text: "something wrong(content is not audio type)" };
 
       return musicUrl;
     } else {
@@ -489,10 +494,12 @@ async function parseALLMP3SU(song, auth, searchOnlyName = false) {
     // if (searchOnlyName) console.log(result);
     if (result != undefined) {
       let musicUrl = "https:" + result.getAttribute("data-file");
-      let fetchresponse = await fetch(musicUrl);
+      let fetchresponse = await fetch(musicUrl, { method: "HEAD" });
       // console.log(fetchresponse);
       if (!fetchresponse.ok)
         throw { type: 1, text: "Broken url(cannot get music url)" };
+      if (!fetchresponse.headers.get("content-type").includes("audio/mpeg"))
+        throw { type: 7, text: "something wrong(content is not audio type)" };
       return musicUrl;
     } else {
       console.error("Тaкой песни нет   --  " + fullURL);
@@ -566,9 +573,11 @@ async function parseKACHEVO(song, auth, searchOnlyName = false) {
         .querySelector(".playlist-item-play")
         .getAttribute("data-url");
 
-      let fetchresponse = await fetch(musicUrl);
+      let fetchresponse = await fetch(musicUrl, { method: "HEAD" });
       if (!fetchresponse.ok)
         throw { type: 1, text: "Broken url(cannot get music url)" };
+      if (!fetchresponse.headers.get("content-type").includes("audio/mpeg"))
+        throw { type: 7, text: "something wrong(content is not audio type)" };
 
       return musicUrl;
     } else {
