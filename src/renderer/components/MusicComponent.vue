@@ -109,33 +109,46 @@ async function downloadClickHandler() {
 
   // url = await parseHITSTER(props.musicData.songName, props.musicData.authors);
 
-  url = await parseOSANIME(props.musicData.songName, props.musicData.authors);
-
-  if (url == null) {
-    url = await parseMP3PARTY(
-      props.musicData.songName,
-      props.musicData.authors
-    );
-  }
-
-  if (url == null) {
-    url = await parseMUZOFOND(
+  let urls = await Promise.all([
+    parseOSANIME(props.musicData.songName, props.musicData.authors),
+    parseMP3PARTY(props.musicData.songName, props.musicData.authors),
+    parseMUZOFOND(
       props.musicData.songName,
       props.musicData.authors,
       props.musicData.originalName
-    );
-  }
-  // if (url == null) {
-  //   url = await parseKACHEVO(props.musicData.songName, props.musicData.authors);
-  // }
+    ),
+    parseKACHEVO(props.musicData.songName, props.musicData.authors),
+    parseALLMP3SU(props.musicData.songName, props.musicData.authors),
+  ]);
 
-  // else if (selectValue.value == "Youtube") url = youtubeurl;
-  console.log(url);
-  //send download request
-  if (url != null && url != undefined) {
+  urls = urls.filter((el) => {
+    return el !== null;
+  });
+  let downloadUrl = urls[0];
+  console.log(urls);
+
+  // let stats = await Promise.all(
+  //   urls.map(async (el) => {
+  //     if (el != null) return fetch(el);
+  //     else return null;
+  //   })
+  // );
+  // let blobs = [];
+  // for (let i of stats) {
+  //   if (i != null) blobs.push({ url: i.url, blob: await i.blob() });
+  // }
+  // blobs.sort((prev, next) => {
+  //   // console.log(prev.blob.size - next.blob.size);
+  //   return next.blob.size - prev.blob.size;
+  // });
+  // console.log(blobs);
+  // let downloadUrl = blobs[0].url;
+
+  // send download request
+  if (urls.length > 0) {
     let id = makeid(10);
     ipcRenderer.send("download", {
-      url: url,
+      url: downloadUrl,
       properties: {
         directory: downloadDir.value,
         filename: `${props.musicData.authors} - ${props.musicData.songName}.mp3`,
